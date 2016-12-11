@@ -1,13 +1,14 @@
-Package: FKD
+Package: fkdR
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Facial Keypoint Detection Package
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
+Author: Henry Perschk <henry.perschk@uni-muenster.de>, Lucas Stegger <lucas.stegger@uni-muenster.de>
+Maintainer: Henry Perschk <henry.perschk@uni-muenster.de>, Lucas Stegger <lucas.stegger@uni-muenster.de>
 Description: More about what it does (maybe more than one line)
-License: What license is it under?
+License: MIT
 LazyData: TRUE
 Imports:
+    doMC,
     reshape2,
     IM,
     ggplot2

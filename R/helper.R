@@ -1,3 +1,15 @@
+#' @export
+fkdr.init <- function(data.dir = data.dir) {
+  doMC::registerDoMC()
+
+  data.dir <<- data.dir
+
+  fkdr.loadData()
+
+  # list the coordinates we have to predict
+  coordinate.names <<- gsub("_x", "", names(d.train)[grep("_x", names(d.train))])
+}
+
 #' @title Plot some images incl. keypoints
 #'
 #' @param imgSet The image set as Matrix with 9216 columns
@@ -12,7 +24,7 @@
 #'
 #' @export
 plotFacialKeypoints <- function(imgSet, imgIndex, keypointPositions = NULL, meanIntensity = NULL, histEqualize = FALSE, order = c("normalize", "equalize")) {
-  img = matrix(data=rev(imgSet[imgIndex, ]), nrow=96, ncol=96)
+  img = vectorToImg(imgSet[imgIndex, ])
 
   if(!is.null(meanIntensity) && histEqualize) {
     if(all(order == c("normalize", "equalize"))) {
@@ -46,6 +58,7 @@ plotFacialKeypoints <- function(imgSet, imgIndex, keypointPositions = NULL, mean
 }
 
 # Create PDF of random 256 training images
+#' @export
 imagesToPdf <- function(imgSet, keypointPositions, name = "images.pdf", meanIntensity = NULL, histEqualize = FALSE, order = c("normalize", "equalize")) {
   dev.new()
   dev.off()
@@ -79,4 +92,12 @@ averageImage <- function(image, meanIntensity) {
   m = mean(image)
   if(m < meanIntensity) return(whitenImage(image, meanIntensity))
   else return(darkenImage(image, meanIntensity))
+}
+
+vectorToImg <- function(v) {
+  matrix(data=rev(v), nrow=96, ncol=96)
+}
+
+imgToVector <- function(img) {
+  rev(as.vector(img))
 }
