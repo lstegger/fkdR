@@ -1,0 +1,82 @@
+#' @title Plot some images incl. keypoints
+#'
+#' @param imgSet The image set as Matrix with 9216 columns
+#' @param imgIndex The index of the image that should be plotted
+#' @param keypointPositions The keypoint positions as data.frame
+#' @param meanIntensity Value between 0 and 255 determining the average intensity the printed image should have
+#' @param histEqualize If set to true the image will be histogram equalized before printing
+#' @param order Determines wether the image should be normalized or equalized first if both functions should be applied
+#' @examples
+#' plotFacialKeypoints(im.train, 1, d.train)
+#' plotFacialKeypoints(im.test, 1)
+#'
+#' @export
+plotFacialKeypoints <- function(imgSet, imgIndex, keypointPositions = NULL, meanIntensity = NULL, histEqualize = FALSE, order = c("normalize", "equalize")) {
+  img = matrix(data=rev(imgSet[imgIndex, ]), nrow=96, ncol=96)
+
+  if(!is.null(meanIntensity) && histEqualize) {
+    if(all(order == c("normalize", "equalize"))) {
+      img = averageImage(img, meanIntensity)
+      img = histeq(img)
+    } else if(all(order == c("equalize", "normalize"))) {
+      img = histeq(img)
+      img = averageImage(img, meanIntensity)
+    } else {
+      stop("wrong order parameters")
+    }
+  } else {
+    if(!is.null(meanIntensity)) {
+      img = averageImage(img, meanIntensity)
+    }
+
+    if(histEqualize) {
+      img = histeq(img)
+    }
+  }
+
+  par(mar = rep(0, 4))
+  image(1:96, 1:96, img, col=gray((0:255)/255), xaxt = "n", yaxt = "n", ann = FALSE, breaks = 0:256)
+
+  if(!is.null(keypointPositions)) {
+    indices = seq(1, ncol(keypointPositions), 2)
+    for (i in indices) {
+      points(96-keypointPositions[imgIndex, ][i], 96-keypointPositions[imgIndex, ][i + 1], col = "green", pch = 4)
+    }
+  }
+}
+
+# Create PDF of random 256 training images
+imagesToPdf <- function(imgSet, keypointPositions, name = "images.pdf", meanIntensity = NULL, histEqualize = FALSE, order = c("normalize", "equalize")) {
+  dev.new()
+  dev.off()
+  par(no.readonly = TRUE)
+  pdf(file = paste0(data.dir, name), paper = 'a4')
+  par(mfrow = c(4, 4))
+  for (index in seq_len(nrow(imgSet))) {
+    plotFacialKeypoints(imgSet, index, keypointPositions, meanIntensity, histEqualize, order)
+  }
+  dev.off()
+}
+
+## Make image pixel intensity as bright as a specified mean value
+whitenImage <- function(image, meanIntensity) {
+  mx = max(image)
+  mn = min(image)
+  weights = (mx - image) / (mx - mn)
+  x = (length(image) * meanIntensity - sum(image)) / sum(weights)
+  return(image + weights * x)
+}
+
+darkenImage <- function(image, meanIntensity) {
+  mx = max(image)
+  mn = min(image)
+  weights = (image - mn) / (mx - mn)
+  x = -(length(image) * meanIntensity - sum(image)) / sum(weights)
+  return(image - weights * x)
+}
+
+averageImage <- function(image, meanIntensity) {
+  m = mean(image)
+  if(m < meanIntensity) return(whitenImage(image, meanIntensity))
+  else return(darkenImage(image, meanIntensity))
+}
