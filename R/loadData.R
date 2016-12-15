@@ -1,5 +1,5 @@
 #' @export
-fkdr.loadData <- function() {
+loadData <- function() {
   file = paste0(data.dir, 'preprocessedData.Rd')
 
   if(file.exists(file)) {

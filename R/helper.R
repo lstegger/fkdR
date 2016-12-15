@@ -1,10 +1,10 @@
 #' @export
-fkdr.init <- function(data.dir = data.dir) {
+init <- function(data.dir = data.dir) {
   doMC::registerDoMC()
 
   data.dir <<- data.dir
 
-  fkdr.loadData()
+  loadData()
 
   # list the coordinates we have to predict
   coordinate.names <<- gsub("_x", "", names(d.train)[grep("_x", names(d.train))])

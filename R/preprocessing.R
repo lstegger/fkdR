@@ -1,5 +1,5 @@
 #' @export
-fkdr.prep.equalize <- function() {
+prep.equalize <- function() {
   print("Applying histogram equalization on test images...")
   im.test.equalized <<- do.call(rbind, lapply(1:nrow(im.test), function(i) {
     if ((i %% 100)==0) { cat(sprintf("%d/%d\n", i, nrow(im.test))) }
@@ -23,4 +23,3 @@ fkdr.prep.equalize <- function() {
 }
 
 # ideas: mirrored copies as further inputs
-
