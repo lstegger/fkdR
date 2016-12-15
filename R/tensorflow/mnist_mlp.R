@@ -7,7 +7,7 @@ sess <- tf$InteractiveSession()
 # Parameters
 learning_rate = 0.001
 training_epochs = 15L
-batch_size = 100L
+batch_size = 50L
 display_step = 1L
 
 # Network Parameters
@@ -54,7 +54,7 @@ sess$run(tf$initialize_all_variables())
 
 # Train and Evaluate the Model
 for (i in seq_len(mnist$train$num_examples)) {
-  batch <- mnist$train$next_batch(50L)
+  batch <- mnist$train$next_batch(batch_size)
   if (i %% 100 == 0) {
     train_accuracy <- accuracy$eval(feed_dict = dict(
                                       x = batch[[1]],
