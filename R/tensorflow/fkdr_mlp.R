@@ -11,10 +11,10 @@ batch_size = 100L
 display_step = 1L
 
 # Network Parameters
-n_input = 784L # MNIST data input (img shape: 28*28)
+n_input = 9216L # 96x96 pixels
 n_hidden_1 = 256L # 1st layer number of features
 n_hidden_2 = 256L # 2nd layer number of features
-n_classes = 10L # MNIST total classes (0-9 digits)
+n_classes = 30L # 15 x, 15 y coordinates
 
 # tf Graph input
 x = tf$placeholder(tf$float32, shape(NULL, n_input))
