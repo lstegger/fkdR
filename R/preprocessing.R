@@ -19,7 +19,7 @@ prep.equalize <- function() {
   storage.mode(im.train.equalized) <<- "integer"
 
   print("Saving preprocessed data...")
-  save(d.train, im.train, d.test, im.test, im.train.equalized, im.test.equalized, file=paste0(data.dir, 'preprocessedData.Rd'))
+  save(d.train, im.train, d.test, im.test, im.train.equalized, im.test.equalized, file=paste0(data.dir, 'preprocessedData.Rd'), compress = TRUE)
 }
 
 # ideas: mirrored copies as further inputs

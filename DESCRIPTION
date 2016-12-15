@@ -6,10 +6,10 @@ Author: Henry Perschk <henry.perschk@uni-muenster.de>, Lucas Stegger <lucas.steg
 Maintainer: Henry Perschk <henry.perschk@uni-muenster.de>, Lucas Stegger <lucas.stegger@uni-muenster.de>
 Description: More about what it does (maybe more than one line)
 License: MIT
-LazyData: TRUE
 Imports:
     doMC,
     reshape2,
     IM,
-    ggplot2
+    ggplot2,
+    mlr
 RoxygenNote: 5.0.1

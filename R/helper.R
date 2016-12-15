@@ -1,11 +1,9 @@
 #' @export
-init <- function(data.dir = data.dir) {
+init <- function() {
   doMC::registerDoMC()
-
-  data.dir <<- data.dir
-
-  loadData()
-
+  data.dir = paste0(system.file("data", package="fkdR"), "/")
+  example.idLookupTable <- read.csv(paste0(data.dir, 'IdLookupTable.csv'))
+  example.submission <- read.csv(paste0(data.dir, 'SampleSubmission.csv'))
   # list the coordinates we have to predict
   coordinate.names <<- gsub("_x", "", names(d.train)[grep("_x", names(d.train))])
 }

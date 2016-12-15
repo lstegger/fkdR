@@ -23,7 +23,7 @@ loadData <- function() {
 
     print("Saving preprocessed data...")
     # Save data
-    save(d.train, im.train, d.test, im.test, file=paste0(data.dir, 'preprocessedData.Rd'))
+    save(d.train, im.train, d.test, im.test, file=paste0(data.dir, 'preprocessedData.Rd', compress = TRUE))
   }
 }
 
