@@ -1,3 +1,7 @@
+### TEMP
+data.dir = '/Users/henry/Dropbox/Universität/Information Systems M.Sc./_Applied Machine Learning WT 2016/data/'
+
+
 #' @export
 fkdr.loadData <- function() {
   file = paste0(data.dir, 'preprocessedData.Rd')

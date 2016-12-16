@@ -1,13 +1,33 @@
 # Load data and start Tensorflow session
 library(tensorflow)
-datasets <- tf$contrib$learn$datasets
-mnist <- datasets$mnist$read_data_sets("MNIST-data", one_hot = TRUE)
+
+# --- DATA ---
+train.x = im.train
+train.y = d.train
+# Only use data with zero NAs for now
+zeroNAindices = which(rowSums(is.na(d.train)) == 0)
+train.x = train.x[zeroNAindices, ]
+train.y = train.y[zeroNAindices, ]
+# Simple split for now
+trainIndices = sample(1:nrow(train.x), size = round(0.7 * nrow(train.x)), replace=FALSE)
+train.x = train.x[trainIndices, ]
+test.x = train.x[-trainIndices, ]
+train.y = train.y[trainIndices, ]
+test.y = train.y[-trainIndices, ]
+# Scale pixel intensities to [0, 1]
+train.x = train.x / 255
+test.x = test.x / 255
+# Scale target coordinates to [-1, 1]
+train.y = (train.y - 48) / 48
+test.y = (test.y - 48) / 48
+# --- /DATA ---
+
 sess <- tf$InteractiveSession()
 
 # Parameters
 learning_rate = 0.001
-training_epochs = 15L
-batch_size = 100L
+training_epochs = 1L
+batch_size = 50L
 display_step = 1L
 
 # Network Parameters
@@ -41,35 +61,47 @@ layer2 = tf$add(tf$matmul(layer1, weight_variable(shape(n_hidden_1, n_hidden_2))
 layer2 = tf$nn$relu(layer2)
 
 out_layer = tf$matmul(layer2, weight_variable(shape(n_hidden_2, n_classes))) +
-  bias_variable(shape(n_classes))
+            bias_variable(shape(n_classes))
 
 # Define loss and optimizer
-cost = tf$reduce_mean(tf$nn$softmax_cross_entropy_with_logits(out_layer, y))
+cost = tf$reduce_mean(tf$square(out_layer - y))
 optimizer = tf$train$AdamOptimizer(learning_rate = learning_rate)$minimize(cost)
-correct_prediction <- tf$equal(tf$argmax(out_layer, 1L), tf$argmax(y, 1L))
-accuracy <- tf$reduce_mean(tf$cast(correct_prediction, tf$float32))
+y_mean = tf$reduce_mean(y)
+# r_squared = tf$reduce_sum(tf$square(out_layer - y_mean)) / tf$reduce_sum(tf$square(y - y_mean))
+# accuracy = r_squared
+accuracy = cost
 
 # Initialize graph
 sess$run(tf$initialize_all_variables())
 
-# Train and Evaluate the Model
-for (i in seq_len(mnist$train$num_examples)) {
-  batch <- mnist$train$next_batch(50L)
-  if (i %% 100 == 0) {
-    train_accuracy <- accuracy$eval(feed_dict = dict(
-      x = batch[[1]],
-      y = batch[[2]]
-    ))
-    cat(sprintf("step %d, training accuracy %g\n", i, train_accuracy))
+#########
+nextBatchIndices <- function(indices, batchNr, batch_size) {
+  position = batchNr * batch_size - batch_size + 1
+  if ((position + batch_size) > length(indices)) {
+    return(indices[position:length(indices)])
   }
-  optimizer$run(feed_dict = dict(
-    x = batch[[1]],
-    y = batch[[2]]
-  ))
+  return(indices[position:(position + batch_size - 1)])
+}
+
+# Train and Evaluate the Model
+for(i in seq_len(training_epochs)) {
+  shuffledIndices = sample(seq_len(nrow(train.x)))
+
+  for(batchNr in seq_len(ceiling(nrow(train.x) / batch_size))) {
+    rowIndices = nextBatchIndices(shuffledIndices, batchNr, batch_size)
+
+    train_accuracy <- accuracy$eval(feed_dict = dict(
+                                                  x = train.x[rowIndices, ],
+                                                  y = train.y[rowIndices, ]))
+    cat(sprintf("step %d, training accuracy %g\n", i, train_accuracy))
+
+    optimizer$run(feed_dict = dict(
+                                x = train.x[rowIndices, ],
+                                y = train.y[rowIndices, ]))
+  }
 }
 
 train_accuracy <- accuracy$eval(feed_dict = dict(
-  x = mnist$test$images,
-  y = mnist$test$labels
-))
+                                  x = test.x,
+                                  y = test.y))
 cat(sprintf("test accuracy %g", train_accuracy))
