@@ -1,5 +1,4 @@
 patch_size  <<- 10
-search_size <<- 2
 
 # for each one, compute the average patch
 mean.patches <- foreach(coord = coordinate.names) %dopar% {
@@ -28,54 +27,84 @@ mean.patches <- foreach(coord = coordinate.names) %dopar% {
   matrix(data = colMeans(patches), nrow=2*patch_size+1, ncol=2*patch_size+1)
 }
 
-# for each coordinate and for each test image, find the position that best correlates with the average patch
-p <- foreach(coord_i = 1:length(coordinate.names), .combine=cbind) %dopar% {
-  # the coordinates we want to predict
-  coord   <- coordinate.names[coord_i]
-  coord_x <- paste(coord, "x", sep="_")
-  coord_y <- paste(coord, "y", sep="_")
+patchSearch.predict <- function()  {
 
-  # the average of them in the training set (our starting point)
-  mean_x  <- mean(d.train[, coord_x], na.rm=T)
-  mean_y  <- mean(d.train[, coord_y], na.rm=T)
+  search_size <<- 2
 
-  # search space: 'search_size' pixels centered on the average coordinates
-  x1 <- as.integer(mean_x)-search_size
-  x2 <- as.integer(mean_x)+search_size
-  y1 <- as.integer(mean_y)-search_size
-  y2 <- as.integer(mean_y)+search_size
+  # for each coordinate and for each test image, find the position that best correlates with the average patch
+  p <- foreach(coord_i = 1:length(coordinate.names), .combine=cbind) %dopar% {
+    # the coordinates we want to predict
+    coord   <- coordinate.names[coord_i]
+    coord_x <- paste(coord, "x", sep="_")
+    coord_y <- paste(coord, "y", sep="_")
 
-  # ensure we only consider patches completely inside the image
-  x1 <- ifelse(x1-patch_size<1,  patch_size+1,  x1)
-  y1 <- ifelse(y1-patch_size<1,  patch_size+1,  y1)
-  x2 <- ifelse(x2+patch_size>96, 96-patch_size, x2)
-  y2 <- ifelse(y2+patch_size>96, 96-patch_size, y2)
+    # the average of them in the training set (our starting point)
+    mean_x  <- mean(d.train[, coord_x], na.rm=T)
+    mean_y  <- mean(d.train[, coord_y], na.rm=T)
 
-  # build a list of all positions to be tested
-  params <- expand.grid(x = x1:x2, y = y1:y2)
+    # search space: 'search_size' pixels centered on the average coordinates
+    x1 <- as.integer(mean_x)-search_size
+    x2 <- as.integer(mean_x)+search_size
+    y1 <- as.integer(mean_y)-search_size
+    y2 <- as.integer(mean_y)+search_size
 
-  # for each image...
-  r <- foreach(i = 1:nrow(d.test), .combine=rbind) %do% {
-    if ((coord_i==1)&&((i %% 100)==0)) { cat(sprintf("%d/%d\n", i, nrow(d.test))) }
-    im <- matrix(data = im.test[i,], nrow=96, ncol=96)
+    # ensure we only consider patches completely inside the image
+    x1 <- ifelse(x1-patch_size<1,  patch_size+1,  x1)
+    y1 <- ifelse(y1-patch_size<1,  patch_size+1,  y1)
+    x2 <- ifelse(x2+patch_size>96, 96-patch_size, x2)
+    y2 <- ifelse(y2+patch_size>96, 96-patch_size, y2)
 
-    # ... compute a score for each position ...
-    r  <- foreach(j = 1:nrow(params), .combine=rbind) %do% {
-      x     <- params$x[j]
-      y     <- params$y[j]
-      p     <- im[(x-patch_size):(x+patch_size), (y-patch_size):(y+patch_size)]
-      score <- cor(as.vector(p), as.vector(mean.patches[[coord_i]]))
-      score <- ifelse(is.na(score), 0, score)
-      data.frame(x, y, score)
+    # build a list of all positions to be tested
+    params <- expand.grid(x = x1:x2, y = y1:y2)
+
+    # for each image...
+    r <- foreach(i = 1:nrow(d.test), .combine=rbind) %do% {
+      if ((coord_i==1)&&((i %% 100)==0)) { cat(sprintf("%d/%d\n", i, nrow(d.test))) }
+      im <- matrix(data = im.test[i,], nrow=96, ncol=96)
+
+      # ... compute a score for each position ...
+      r  <- foreach(j = 1:nrow(params), .combine=rbind) %do% {
+        x     <- params$x[j]
+        y     <- params$y[j]
+        p     <- im[(x-patch_size):(x+patch_size), (y-patch_size):(y+patch_size)]
+        score <- cor(as.vector(p), as.vector(mean.patches[[coord_i]]))
+        score <- ifelse(is.na(score), 0, score)
+        data.frame(x, y, score)
+      }
+
+      # ... and return the best
+      best <- r[which.max(r$score), c("x", "y")]
     }
-
-    # ... and return the best
-    best <- r[which.max(r$score), c("x", "y")]
+    names(r) <- c(coord_x, coord_y)
+    r
   }
-  names(r) <- c(coord_x, coord_y)
-  r
+
+  data.frame(ImageId = 1:nrow(d.test), p)
 }
 
-
 # prepare file for submission
-predictions        <- data.frame(ImageId = 1:nrow(d.test), p)
+
+
+makeRLearner.regr.patchSearch = function() {
+  makeRLearnerRegr(
+    cl = "regr.fkdR.patchSearch",
+    package = "fkdR",
+    par.set = makeParamSet(
+      makeNumericLearnerParam(id = "patch_size", default = 10, lower = 0, tunable = TRUE),
+      makeNumericLearnerParam(id = "search_size", default = 2, lower = 1, tunable = TRUE)
+    ),
+    properties = c("numerics", "factors"),
+    name = "Multivariate Adaptive Regression Splines",
+    short.name = "earth",
+    note = ""
+  )
+}
+
+trainLearner.regr.patchSearch = function(.learner, .task, .subset, ...) {
+  f = getTaskFormula(.task)
+  fkdR::patchSearch.train(f, data = getTaskData(.task, .subset), ...)
+}
+
+predictLearner.regr.patchSearch = function(.learner, .model, .newdata, ...) {
+  fkdR::patchSearch.predict(.model$learner.model, newdata = .newdata, ...)
+}

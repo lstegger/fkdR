@@ -1,5 +1,5 @@
 #' @export
-fkdr.prep.equalize <- function() {
+prep.equalize <- function() {
   print("Applying histogram equalization on test images...")
   im.test.equalized <<- do.call(rbind, lapply(1:nrow(im.test), function(i) {
     if ((i %% 100)==0) { cat(sprintf("%d/%d\n", i, nrow(im.test))) }
@@ -19,8 +19,7 @@ fkdr.prep.equalize <- function() {
   storage.mode(im.train.equalized) <<- "integer"
 
   print("Saving preprocessed data...")
-  save(d.train, im.train, d.test, im.test, im.train.equalized, im.test.equalized, file=paste0(data.dir, 'preprocessedData.Rd'))
+  save(d.train, im.train, d.test, im.test, im.train.equalized, im.test.equalized, file=paste0(data.dir, 'preprocessedData.Rd'), compress = TRUE)
 }
 
 # ideas: mirrored copies as further inputs
-

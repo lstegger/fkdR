@@ -3,7 +3,7 @@ data.dir = '/Users/henry/Dropbox/Universität/Information Systems M.Sc./_Applied
 
 
 #' @export
-fkdr.loadData <- function() {
+loadData <- function() {
   file = paste0(data.dir, 'preprocessedData.Rd')
 
   if(file.exists(file)) {
@@ -27,7 +27,7 @@ fkdr.loadData <- function() {
 
     print("Saving preprocessed data...")
     # Save data
-    save(d.train, im.train, d.test, im.test, file=paste0(data.dir, 'preprocessedData.Rd'))
+    save(d.train, im.train, d.test, im.test, file=paste0(data.dir, 'preprocessedData.Rd', compress = TRUE))
   }
 }
 
