@@ -24,6 +24,8 @@ plotFacialKeypoints(imgSet, imgIndex, keypointPositions = NULL,
 \examples{
 plotFacialKeypoints(im.train, 1, d.train)
 plotFacialKeypoints(im.test, 1)
+plotFacialKeypoints(im.train.equalized, 1, d.train)
+plotFacialKeypoints(im.test.equalized, 1)
 
 }
 
