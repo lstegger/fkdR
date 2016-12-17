@@ -1,13 +1,27 @@
 #' @export
-init <- function() {
+init <- function(data.dir = NULL, data.dir.raw = NULL, submission.dir = NULL) {
   # register multicore
   doMC::registerDoMC()
   doParallel::registerDoParallel()
 
   # set paths
-  data.dir       <<- paste0(system.file("data", package="fkdR"), "/")
-  data.dir.raw   <<- paste0(system.file("data-raw", package="fkdR"), "/")
-  submission.dir <<- paste0(system.file("submission", package="fkdR"), "/")
+  if(!is.null(data.dir)) {
+    data.dir <<- data.dir
+  } else {
+    data.dir <<- paste0(system.file("data", package="fkdR"), "/")
+  }
+
+  if(!is.null(data.dir)) {
+    data.dir.raw  <<- data.dir.raw
+  } else {
+    data.dir.raw  <<- paste0(system.file("data-raw", package="fkdR"), "/")
+  }
+
+  if(!is.null(data.dir)) {
+    submission.dir <<- submission.dir
+  } else {
+    submission.dir <<- paste0(system.file("submission", package="fkdR"), "/")
+  }
 
   # read submission-relevant files
   example.idLookupTable <- read.csv(paste0(data.dir, 'IdLookupTable.csv'))

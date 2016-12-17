@@ -1,7 +1,6 @@
+### TEMP
+#data.dir = '/Users/henry/Dropbox/Universität/Information Systems M.Sc./_Applied Machine Learning WT 2016/data/'
 
-#' Title
-#'
-#' @return
 #' @export
 #'
 #' @examples
