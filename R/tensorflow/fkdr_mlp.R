@@ -102,4 +102,6 @@ train_accuracy <- accuracy$eval(feed_dict = dict(x = test.x, y = test.y))
 cat(sprintf("Test RMSE: %g", train_accuracy))
 
 # Plot on first test image
-plotFacialKeypoints(test.x * 255, 1, (out_layer$eval(feed_dict = dict(x = test.x)) * 48 + 48))
+data = test.x * 255
+pred = out_layer$eval(feed_dict = dict(x = test.x)) * 48 + 48
+plotFacialKeypoints(data, 1, pred)
