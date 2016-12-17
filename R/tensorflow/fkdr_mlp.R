@@ -83,18 +83,20 @@ nextBatchIndices <- function(indices, batchNr, batch_size) {
 }
 
 # Train and Evaluate the Model
-for(i in seq_len(training_epochs)) {
+numberOfBatches = ceiling(nrow(train.x) / batch_size)
+
+for(epoch in seq_len(training_epochs)) {
   shuffledIndices = sample(seq_len(nrow(train.x)))
 
-  for(batchNr in seq_len(ceiling(nrow(train.x) / batch_size))) {
+  for(batchNr in seq_len(numberOfBatches)) {
     rowIndices = nextBatchIndices(shuffledIndices, batchNr, batch_size)
 
     train_accuracy <- accuracy$eval(feed_dict = dict(x = train.x[rowIndices, ], y = train.y[rowIndices, ]))
-    cat(sprintf("step %d, training RMSE %g\n", i, train_accuracy))
+    cat(sprintf("Epoch: %d | Batch %d/%d | Training RMSE: %g\n", epoch, batchNr, numberOfBatches, train_accuracy))
 
     optimizer$run(feed_dict = dict(x = train.x[rowIndices, ], y = train.y[rowIndices, ]))
   }
 }
 
 train_accuracy <- accuracy$eval(feed_dict = dict(x = test.x, y = test.y))
-cat(sprintf("test RMSE %g", train_accuracy))
+cat(sprintf("Test RMSE: %g", train_accuracy))
