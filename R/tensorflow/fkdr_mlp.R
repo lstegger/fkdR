@@ -26,7 +26,7 @@ sess <- tf$InteractiveSession()
 
 # Parameters
 learning_rate = 0.001
-training_epochs = 10L
+training_epochs = 100L
 batch_size = 50L
 display_step = 1L
 
