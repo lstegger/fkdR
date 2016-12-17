@@ -5,6 +5,8 @@ fkdr.predict <- function(method = 'patch', ...) {
 
 #' @export
 fkdr.writeSubmissionFile <- function(predictions, filename = "submission.csv") {
+  colnames(predictions) = names(d.train)
+  predictions = data.frame(ImageId = 1:nrow(d.test), predictions)
   submission <- reshape2::melt(predictions, id.vars="ImageId", variable.name="FeatureName", value.name="Location")
   head(submission)
 

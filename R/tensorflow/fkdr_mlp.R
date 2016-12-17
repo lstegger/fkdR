@@ -26,7 +26,7 @@ sess <- tf$InteractiveSession()
 
 # Parameters
 learning_rate = 0.001
-training_epochs = 1000L
+training_epochs = 1L
 batch_size = 50L
 display_step = 1L
 
@@ -108,13 +108,11 @@ plotFacialKeypoints(data, 1, pred)
 
 # Save data
 saver <- tf$train$Saver()
-data_file <- saver$save(sess, paste0(data.dir, "fkdr_mlp_1000epochs.ckpt"))
+# data_file <- saver$save(sess, paste0(data.dir, "fkdr_mlp_1000epochs.ckpt"))
 
-# Restore Data
-with(tf$Session() %as% sess, {
-  saver$restore(sess, paste0(data.dir, "fkdr_mlp_1000epochs.ckpt"))
-  cat("Model restored.\n")
-})
+# # Restore Data
+# saver$restore(sess, paste0(data.dir, "fkdr_mlp_1000epochs.ckpt"))
+# cat("Model restored.\n")
 
 # Make submission file
 data = im.test / 255
