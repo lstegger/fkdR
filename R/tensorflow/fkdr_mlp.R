@@ -26,7 +26,7 @@ sess <- tf$InteractiveSession()
 
 # Parameters
 learning_rate = 0.001
-training_epochs = 1L
+training_epochs = 10L
 batch_size = 50L
 display_step = 1L
 
@@ -98,8 +98,8 @@ for(epoch in seq_len(training_epochs)) {
   }
 }
 
-train_accuracy <- accuracy$eval(feed_dict = dict(x = test.x, y = test.y))
-cat(sprintf("Test RMSE: %g", train_accuracy))
+test_accuracy <- accuracy$eval(feed_dict = dict(x = test.x, y = test.y))
+cat(sprintf("Test RMSE: %g", test_accuracy))
 
 # Plot on first test image
 data = test.x * 255
@@ -108,11 +108,12 @@ plotFacialKeypoints(data, 1, pred)
 
 # Save data
 saver <- tf$train$Saver()
-# data_file <- saver$save(sess, paste0(data.dir, "fkdr_mlp_1000epochs.ckpt"))
+data_file <- saver$save(sess, paste0(data.dir, "fkdr_mlp_1000epochs.ckpt"))
 
-# # Restore Data
-# saver$restore(sess, paste0(data.dir, "fkdr_mlp_1000epochs.ckpt"))
-# cat("Model restored.\n")
+# Restore Data
+sess = tf$InteractiveSession()
+restorer = tf$train$import_meta_graph(paste0(data.dir, "fkdr_mlp_1000epochs.ckpt.meta"))
+restorer$restore(sess, tf$train$latest_checkpoint(data.dir))
 
 # Make submission file
 data = im.test / 255
