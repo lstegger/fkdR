@@ -1,20 +1,28 @@
 #' @export
-init <- function(data.dir = NULL, data.dir.raw = NULL, submission.dir = NULL) {
+init <- function(data.dir = NULL, data.raw.dir = NULL, submission.dir = NULL) {
   # register multicore
   doMC::registerDoMC()
   doParallel::registerDoParallel()
 
   # set paths
+  # todo: remove hotfix
   if(!is.null(data.dir)) {
     data.dir <<- data.dir
+    # read submission-relevant files
+    example.idLookupTable <- read.csv(paste0(data.dir, 'IdLookupTable.csv'))
+    example.submission <- read.csv(paste0(data.dir, 'SampleSubmission.csv'))
   } else {
-    data.dir <<- paste0(system.file("data", package="fkdR"), "/")
+    temp.dir <- paste0(system.file("data", package="fkdR"), "/")
+    # read submission-relevant files
+    example.idLookupTable <- read.csv(paste0(temp.dir, 'IdLookupTable.csv'))
+    example.submission <- read.csv(paste0(temp.dir, 'SampleSubmission.csv'))
+    data.dir <<- temp.dir
   }
 
   if(!is.null(data.dir)) {
-    data.dir.raw  <<- data.dir.raw
+    data.raw.dir  <<- data.raw.dir
   } else {
-    data.dir.raw  <<- paste0(system.file("data-raw", package="fkdR"), "/")
+    data.raw.dir  <<- paste0(system.file("data-raw", package="fkdR"), "/")
   }
 
   if(!is.null(data.dir)) {
@@ -22,10 +30,6 @@ init <- function(data.dir = NULL, data.dir.raw = NULL, submission.dir = NULL) {
   } else {
     submission.dir <<- paste0(system.file("submission", package="fkdR"), "/")
   }
-
-  # read submission-relevant files
-  example.idLookupTable <- read.csv(paste0(data.dir, 'IdLookupTable.csv'))
-  example.submission <- read.csv(paste0(data.dir, 'SampleSubmission.csv'))
 
   # list the coordinates we have to predict
   # coordinate.names <<- gsub("_x", "", names(d.train)[grep("_x", names(d.train))])

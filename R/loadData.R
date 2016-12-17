@@ -7,8 +7,8 @@
 processRawData <- function() {
   print("This may take a while...")
   print("Loading datasets...")
-  d.train <<- read.csv(paste0(data.dir.raw, 'faces.train.csv.gz'), stringsAsFactors=F)
-  d.test  <<- read.csv(paste0(data.dir.raw, 'faces.test.csv.gz'),  stringsAsFactors=F)
+  d.train <<- read.csv(paste0(data.raw.dir, 'faces.train.csv.gz'), stringsAsFactors=F)
+  d.test  <<- read.csv(paste0(data.raw.dir, 'faces.test.csv.gz'),  stringsAsFactors=F)
 
   # Put images in separate variable
   # im.train      <<- d.train$Image
