@@ -22,11 +22,9 @@ train.y = (train.y - 48) / 48
 test.y = (test.y - 48) / 48
 # --- /DATA ---
 
-sess <- tf$InteractiveSession()
-
 # Parameters
 learning_rate = 0.001
-training_epochs = 10L
+training_epochs = 3L
 batch_size = 50L
 display_step = 1L
 
@@ -71,6 +69,7 @@ y_mean = tf$reduce_mean(y)
 accuracy = tf$sqrt(cost) * 48
 
 # Initialize graph
+sess <- tf$Session()
 sess$run(tf$initialize_all_variables())
 
 # Simple function that returns indices for batching
@@ -91,19 +90,19 @@ for(epoch in seq_len(training_epochs)) {
   for(batchNr in seq_len(numberOfBatches)) {
     rowIndices = nextBatchIndices(shuffledIndices, batchNr, batch_size)
 
-    train_accuracy <- accuracy$eval(feed_dict = dict(x = train.x[rowIndices, ], y = train.y[rowIndices, ]))
+    train_accuracy <- sess$run(accuracy, feed_dict = dict(x = train.x[rowIndices, ], y = train.y[rowIndices, ]))
     cat(sprintf("Epoch: %d | Batch: %d/%d | Training RMSE: %g\n", epoch, batchNr, numberOfBatches, train_accuracy))
 
-    optimizer$run(feed_dict = dict(x = train.x[rowIndices, ], y = train.y[rowIndices, ]))
+    sess$run(optimizer, feed_dict = dict(x = train.x[rowIndices, ], y = train.y[rowIndices, ]))
   }
 }
 
-test_accuracy <- accuracy$eval(feed_dict = dict(x = test.x, y = test.y))
+test_accuracy <- sess$run(accuracy, feed_dict = dict(x = test.x, y = test.y))
 cat(sprintf("Test RMSE: %g", test_accuracy))
 
 # Plot on first test image
 data = test.x * 255
-pred = out_layer$eval(feed_dict = dict(x = test.x)) * 48 + 48
+pred = sess$run(out_layer, feed_dict = dict(x = test.x)) * 48 + 48
 plotFacialKeypoints(data, 1, pred)
 
 # Save data
@@ -111,7 +110,7 @@ saver <- tf$train$Saver()
 data_file <- saver$save(sess, paste0(data.dir, "fkdr_mlp_1000epochs.ckpt"))
 
 # Restore Data
-sess = tf$InteractiveSession()
+sess = tf$Session()
 restorer = tf$train$import_meta_graph(paste0(data.dir, "fkdr_mlp_1000epochs.ckpt.meta"))
 restorer$restore(sess, tf$train$latest_checkpoint(data.dir))
 
