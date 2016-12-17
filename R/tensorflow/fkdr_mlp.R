@@ -26,7 +26,7 @@ sess <- tf$InteractiveSession()
 
 # Parameters
 learning_rate = 0.001
-training_epochs = 100L
+training_epochs = 1000L
 batch_size = 50L
 display_step = 1L
 
@@ -68,7 +68,7 @@ cost = tf$reduce_mean(tf$square(out_layer - y))
 optimizer = tf$train$AdamOptimizer(learning_rate = learning_rate)$minimize(cost)
 y_mean = tf$reduce_mean(y)
 # r_squared = tf$reduce_sum(tf$square(out_layer - y_mean)) / tf$reduce_sum(tf$square(y - y_mean))
-accuracy = cost
+accuracy = tf$sqrt(cost) * 48
 
 # Initialize graph
 sess$run(tf$initialize_all_variables())
@@ -92,7 +92,7 @@ for(epoch in seq_len(training_epochs)) {
     rowIndices = nextBatchIndices(shuffledIndices, batchNr, batch_size)
 
     train_accuracy <- accuracy$eval(feed_dict = dict(x = train.x[rowIndices, ], y = train.y[rowIndices, ]))
-    cat(sprintf("Epoch: %d | Batch %d/%d | Training RMSE: %g\n", epoch, batchNr, numberOfBatches, train_accuracy))
+    cat(sprintf("Epoch: %d | Batch: %d/%d | Training RMSE: %g\n", epoch, batchNr, numberOfBatches, train_accuracy))
 
     optimizer$run(feed_dict = dict(x = train.x[rowIndices, ], y = train.y[rowIndices, ]))
   }
@@ -105,3 +105,13 @@ cat(sprintf("Test RMSE: %g", train_accuracy))
 data = test.x * 255
 pred = out_layer$eval(feed_dict = dict(x = test.x)) * 48 + 48
 plotFacialKeypoints(data, 1, pred)
+
+# Save data
+saver <- tf$train$Saver()
+data_file <- saver$save(sess, paste0(data.dir, "fkdr_mlp_1000epochs.ckpt"))
+
+# Restore Data
+# with(tf$Session() %as% sess, {
+#   saver$restore(sess, paste0(data.dir, "fkdr_mlp_1000epochs.ckpt")
+#   cat("Model restored.\n")
+# })
