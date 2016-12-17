@@ -116,5 +116,5 @@ restorer$restore(sess, tf$train$latest_checkpoint(data.dir))
 
 # Make submission file
 data = d.test$Image / 255
-pred = out_layer$eval(feed_dict = dict(x = data)) * 48 + 48
-writeSubmissionFile(predictions = pred)
+pred = sess$run(out_layer, feed_dict = dict(x = data)) * 48 + 48
+writeSubmissionFile(predictions = pred, "/Users/henry/Dropbox/Universität/Information Systems M.Sc./_Applied Machine Learning WT 2016/fkdr_submissions/")

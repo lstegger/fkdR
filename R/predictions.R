@@ -4,7 +4,7 @@ predict <- function(method = 'patch', ...) {
 }
 
 #' @export
-writeSubmissionFile <- function(predictions, filename = "submission.csv") {
+writeSubmissionFile <- function(predictions, submission.dir, filename = "submission.csv") {
   colnames(predictions) = names(d.train[,-31])
   predictions = data.frame(ImageId = 1:nrow(d.test), predictions)
 
