@@ -111,7 +111,12 @@ saver <- tf$train$Saver()
 data_file <- saver$save(sess, paste0(data.dir, "fkdr_mlp_1000epochs.ckpt"))
 
 # Restore Data
-# with(tf$Session() %as% sess, {
-#   saver$restore(sess, paste0(data.dir, "fkdr_mlp_1000epochs.ckpt")
-#   cat("Model restored.\n")
-# })
+with(tf$Session() %as% sess, {
+  saver$restore(sess, paste0(data.dir, "fkdr_mlp_1000epochs.ckpt")
+  cat("Model restored.\n")
+})
+
+# Make submission file
+data = im.test / 255
+pred = out_layer$eval(feed_dict = dict(x = data)) * 48 + 48
+fkdr.writeSubmissionFile(predictions = pred)
