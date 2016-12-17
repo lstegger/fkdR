@@ -112,7 +112,7 @@ data_file <- saver$save(sess, paste0(data.dir, "fkdr_mlp_1000epochs.ckpt"))
 
 # Restore Data
 with(tf$Session() %as% sess, {
-  saver$restore(sess, paste0(data.dir, "fkdr_mlp_1000epochs.ckpt")
+  saver$restore(sess, paste0(data.dir, "fkdr_mlp_1000epochs.ckpt"))
   cat("Model restored.\n")
 })
 
