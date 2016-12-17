@@ -26,7 +26,7 @@ sess <- tf$InteractiveSession()
 
 # Parameters
 learning_rate = 0.001
-training_epochs = 15L
+training_epochs = 10L
 batch_size = 50L
 display_step = 1L
 
@@ -73,7 +73,7 @@ accuracy = cost
 # Initialize graph
 sess$run(tf$initialize_all_variables())
 
-#########
+# Simple function that returns indices for batching
 nextBatchIndices <- function(indices, batchNr, batch_size) {
   position = batchNr * batch_size - batch_size + 1
   if ((position + batch_size) > length(indices)) {
@@ -100,3 +100,6 @@ for(epoch in seq_len(training_epochs)) {
 
 train_accuracy <- accuracy$eval(feed_dict = dict(x = test.x, y = test.y))
 cat(sprintf("Test RMSE: %g", train_accuracy))
+
+# Plot on first test image
+plotFacialKeypoints(test.x * 255, 1, (out_layer$eval(feed_dict = dict(x = test.x)) * 48 + 48))
