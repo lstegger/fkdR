@@ -2,8 +2,8 @@
 library(tensorflow)
 
 # --- DATA ---
-train.x = im.train
-train.y = d.train
+train.x = as.matrix(im.train)
+train.y = as.matrix(d.train)
 # Only use data with zero NAs for now
 zeroNAindices = which(rowSums(is.na(d.train)) == 0)
 train.x = train.x[zeroNAindices, ]
@@ -26,7 +26,7 @@ sess <- tf$InteractiveSession()
 
 # Parameters
 learning_rate = 0.001
-training_epochs = 1L
+training_epochs = 15L
 batch_size = 50L
 display_step = 1L
 
@@ -68,7 +68,6 @@ cost = tf$reduce_mean(tf$square(out_layer - y))
 optimizer = tf$train$AdamOptimizer(learning_rate = learning_rate)$minimize(cost)
 y_mean = tf$reduce_mean(y)
 # r_squared = tf$reduce_sum(tf$square(out_layer - y_mean)) / tf$reduce_sum(tf$square(y - y_mean))
-# accuracy = r_squared
 accuracy = cost
 
 # Initialize graph
@@ -90,18 +89,12 @@ for(i in seq_len(training_epochs)) {
   for(batchNr in seq_len(ceiling(nrow(train.x) / batch_size))) {
     rowIndices = nextBatchIndices(shuffledIndices, batchNr, batch_size)
 
-    train_accuracy <- accuracy$eval(feed_dict = dict(
-                                                  x = train.x[rowIndices, ],
-                                                  y = train.y[rowIndices, ]))
-    cat(sprintf("step %d, training accuracy %g\n", i, train_accuracy))
+    train_accuracy <- accuracy$eval(feed_dict = dict(x = train.x[rowIndices, ], y = train.y[rowIndices, ]))
+    cat(sprintf("step %d, training RMSE %g\n", i, train_accuracy))
 
-    optimizer$run(feed_dict = dict(
-                                x = train.x[rowIndices, ],
-                                y = train.y[rowIndices, ]))
+    optimizer$run(feed_dict = dict(x = train.x[rowIndices, ], y = train.y[rowIndices, ]))
   }
 }
 
-train_accuracy <- accuracy$eval(feed_dict = dict(
-                                  x = test.x,
-                                  y = test.y))
-cat(sprintf("test accuracy %g", train_accuracy))
+train_accuracy <- accuracy$eval(feed_dict = dict(x = test.x, y = test.y))
+cat(sprintf("test RMSE %g", train_accuracy))
