@@ -2,8 +2,8 @@
 library(tensorflow)
 
 # --- DATA ---
-train.x = as.matrix(im.train)
-train.y = as.matrix(d.train)
+train.x = as.matrix(d.train$Image)
+train.y = as.matrix(d.train[,-31])
 # Only use data with zero NAs for now
 zeroNAindices = which(rowSums(is.na(d.train)) == 0)
 train.x = train.x[zeroNAindices, ]
@@ -115,6 +115,6 @@ restorer = tf$train$import_meta_graph(paste0(data.dir, "fkdr_mlp_1000epochs.ckpt
 restorer$restore(sess, tf$train$latest_checkpoint(data.dir))
 
 # Make submission file
-data = im.test / 255
+data = d.test$Image / 255
 pred = out_layer$eval(feed_dict = dict(x = data)) * 48 + 48
-fkdr.writeSubmissionFile(predictions = pred)
+writeSubmissionFile(predictions = pred)

@@ -12,14 +12,15 @@ prep.equalize <- function() {
     IM::histeq(im.train[i,])
   }))
 
-  im.test.equalized <<- round(im.test.equalized)
+  d.test.equalized <<- round(im.test.equalized)
   im.train.equalized <<- round(im.train.equalized)
 
   storage.mode(im.test.equalized) <<- "integer"
   storage.mode(im.train.equalized) <<- "integer"
 
   print("Saving preprocessed data...")
-  save(d.train, im.train, d.test, im.test, im.train.equalized, im.test.equalized, file=paste0(data.dir, 'preprocessedData.Rd'), compress = TRUE)
+  save(im.test.equalized,  file=paste0(data.dir, 'faces.test.equalized.RData'),  compress = TRUE)
+  save(im.train.equalized, file=paste0(data.dir, 'faces.train.equalized.RData'), compress = TRUE)
 }
 
 # ideas: mirrored copies as further inputs

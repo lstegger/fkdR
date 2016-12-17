@@ -1,11 +1,38 @@
 #' @export
-init <- function() {
+init <- function(data.dir = NULL, data.raw.dir = NULL, submission.dir = NULL) {
+  # register multicore
   doMC::registerDoMC()
-  data.dir = paste0(system.file("data", package="fkdR"), "/")
-  example.idLookupTable <- read.csv(paste0(data.dir, 'IdLookupTable.csv'))
-  example.submission <- read.csv(paste0(data.dir, 'SampleSubmission.csv'))
+  doParallel::registerDoParallel()
+
+  # set paths
+  # todo: remove hotfix
+  if(!is.null(data.dir)) {
+    data.dir <<- data.dir
+    # read submission-relevant files
+    example.idLookupTable <- read.csv(paste0(data.dir, 'IdLookupTable.csv'))
+    example.submission <- read.csv(paste0(data.dir, 'SampleSubmission.csv'))
+  } else {
+    temp.dir <- paste0(system.file("data", package="fkdR"), "/")
+    # read submission-relevant files
+    example.idLookupTable <- read.csv(paste0(temp.dir, 'IdLookupTable.csv'))
+    example.submission <- read.csv(paste0(temp.dir, 'SampleSubmission.csv'))
+    data.dir <<- temp.dir
+  }
+
+  if(!is.null(data.dir)) {
+    data.raw.dir  <<- data.raw.dir
+  } else {
+    data.raw.dir  <<- paste0(system.file("data-raw", package="fkdR"), "/")
+  }
+
+  if(!is.null(data.dir)) {
+    submission.dir <<- submission.dir
+  } else {
+    submission.dir <<- paste0(system.file("submission", package="fkdR"), "/")
+  }
+
   # list the coordinates we have to predict
-  coordinate.names <<- gsub("_x", "", names(d.train)[grep("_x", names(d.train))])
+  # coordinate.names <<- gsub("_x", "", names(d.train)[grep("_x", names(d.train))])
 }
 
 #' @title Plot some images incl. keypoints
@@ -19,6 +46,8 @@ init <- function() {
 #' @examples
 #' plotFacialKeypoints(im.train, 1, d.train)
 #' plotFacialKeypoints(im.test, 1)
+#' plotFacialKeypoints(im.train.equalized, 1, d.train)
+#' plotFacialKeypoints(im.test.equalized, 1)
 #'
 #' @export
 plotFacialKeypoints <- function(imgSet, imgIndex, keypointPositions = NULL, meanIntensity = NULL, histEqualize = FALSE, order = c("normalize", "equalize")) {

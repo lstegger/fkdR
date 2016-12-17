@@ -1,12 +1,13 @@
 #' @export
-fkdr.predict <- function(method = 'patch', ...) {
+predict <- function(method = 'patch', ...) {
 
 }
 
 #' @export
-fkdr.writeSubmissionFile <- function(predictions, filename = "submission.csv") {
-  colnames(predictions) = names(d.train)
+writeSubmissionFile <- function(predictions, filename = "submission.csv") {
+  colnames(predictions) = names(d.train[,-31])
   predictions = data.frame(ImageId = 1:nrow(d.test), predictions)
+
   submission <- reshape2::melt(predictions, id.vars="ImageId", variable.name="FeatureName", value.name="Location")
   head(submission)
 
@@ -17,5 +18,5 @@ fkdr.writeSubmissionFile <- function(predictions, filename = "submission.csv") {
   submission = submission[, sub.col.names]
   submission$ImageId = NULL
   submission$FeatureName = NULL
-  write.csv(submission, file=paste0(data.dir, filename), quote=F, row.names=F)
+  write.csv(submission, file=paste0(submission.dir, filename), quote=F, row.names=F)
 }

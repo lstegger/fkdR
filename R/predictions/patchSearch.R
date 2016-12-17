@@ -1,36 +1,35 @@
-patch_size  <<- 10
+patchSearch.train <- function(f, data.train, patch_size) {
+  data.train
 
-# for each one, compute the average patch
-mean.patches <- foreach(coord = coordinate.names) %dopar% {
-  cat(sprintf("computing mean patch for %s\n", coord))
-  coord_x <- paste(coord, "x", sep="_")
-  coord_y <- paste(coord, "y", sep="_")
-
-  # compute average patch
-  patches <- foreach (i = 1:nrow(d.train), .combine=rbind) %do% {
-    im  <- matrix(data = im.train[i,], nrow=96, ncol=96)
-    x   <- d.train[i, coord_x]
-    y   <- d.train[i, coord_y]
-    x1  <- (x-patch_size)
-    x2  <- (x+patch_size)
-    y1  <- (y-patch_size)
-    y2  <- (y+patch_size)
-    if ( (!is.na(x)) && (!is.na(y)) && (x1>=1) && (x2<=96) && (y1>=1) && (y2<=96) )
-    {
-      as.vector(im[x1:x2, y1:y2])
-    }
-    else
-    {
-      NULL
-    }
-  }
-  matrix(data = colMeans(patches), nrow=2*patch_size+1, ncol=2*patch_size+1)
+  # for each one, compute the average patch
+  # mean.patches <- foreach(coord = coordinate.names) %dopar% {
+  #   cat(sprintf("computing mean patch for %s\n", coord))
+  #   coord_x <- paste(coord, "x", sep="_")
+  #   coord_y <- paste(coord, "y", sep="_")
+  #
+  #   # compute average patch
+  #   patches <- foreach (i = 1:nrow(data.train), .combine=rbind) %do% {
+  #     im  <- matrix(data = data.train[i,], nrow=96, ncol=96)
+  #     x   <- d.train[i, coord_x]
+  #     y   <- d.train[i, coord_y]
+  #     x1  <- (x-patch_size)
+  #     x2  <- (x+patch_size)
+  #     y1  <- (y-patch_size)
+  #     y2  <- (y+patch_size)
+  #     if ( (!is.na(x)) && (!is.na(y)) && (x1>=1) && (x2<=96) && (y1>=1) && (y2<=96) )
+  #     {
+  #       as.vector(im[x1:x2, y1:y2])
+  #     }
+  #     else
+  #     {
+  #       NULL
+  #     }
+  #   }
+  #   matrix(data = colMeans(patches), nrow=2*patch_size+1, ncol=2*patch_size+1)
+  # }
 }
 
-patchSearch.predict <- function()  {
-
-  search_size <<- 2
-
+patchSearch.predict <- function(model, data.test, search_size)  {
   # for each coordinate and for each test image, find the position that best correlates with the average patch
   p <- foreach(coord_i = 1:length(coordinate.names), .combine=cbind) %dopar% {
     # the coordinates we want to predict
@@ -58,9 +57,9 @@ patchSearch.predict <- function()  {
     params <- expand.grid(x = x1:x2, y = y1:y2)
 
     # for each image...
-    r <- foreach(i = 1:nrow(d.test), .combine=rbind) %do% {
+    r <- foreach(i = 1:nrow(data.test), .combine=rbind) %do% {
       if ((coord_i==1)&&((i %% 100)==0)) { cat(sprintf("%d/%d\n", i, nrow(d.test))) }
-      im <- matrix(data = im.test[i,], nrow=96, ncol=96)
+      im <- matrix(data = data.test[i,], nrow=96, ncol=96)
 
       # ... compute a score for each position ...
       r  <- foreach(j = 1:nrow(params), .combine=rbind) %do% {
@@ -81,8 +80,6 @@ patchSearch.predict <- function()  {
 
   data.frame(ImageId = 1:nrow(d.test), p)
 }
-
-# prepare file for submission
 
 
 makeRLearner.regr.patchSearch = function() {
