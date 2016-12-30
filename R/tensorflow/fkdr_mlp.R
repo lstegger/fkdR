@@ -24,7 +24,7 @@ test.y = (test.y - 48) / 48
 
 # Parameters
 learning_rate = 0.001
-training_epochs = 3L
+training_epochs = 10L
 batch_size = 50L
 display_step = 1L
 
@@ -107,12 +107,12 @@ plotFacialKeypoints(data, 1, pred)
 
 # Save data
 saver <- tf$train$Saver()
-data_file <- saver$save(sess, paste0(data.dir, "fkdr_mlp_1000epochs.ckpt"))
+data_file <- saver$save(sess, paste0("/Users/henry/Dropbox/Universität/Information Systems M.Sc./_Applied Machine Learning WT 2016/fkdr_submissions/", "fkdr_mlp_1000epochs.ckpt"))
 
 # Restore Data
-sess = tf$Session()
-restorer = tf$train$import_meta_graph(paste0(data.dir, "fkdr_mlp_1000epochs.ckpt.meta"))
-restorer$restore(sess, tf$train$latest_checkpoint(data.dir))
+# # sess = tf$Session()
+restorer = tf$train$import_meta_graph(paste0("/Users/henry/Dropbox/Universität/Information Systems M.Sc./_Applied Machine Learning WT 2016/fkdr_submissions/", "fkdr_mlp_1000epochs.ckpt.meta"))
+restorer$restore(sess, tf$train$latest_checkpoint("/Users/henry/Dropbox/Universität/Information Systems M.Sc./_Applied Machine Learning WT 2016/fkdr_submissions/"))
 
 # Make submission file
 data = d.test$Image / 255
