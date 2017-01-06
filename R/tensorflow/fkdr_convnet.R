@@ -1,4 +1,5 @@
 # Load data and start Tensorflow session
+library(fkdR)
 library(tensorflow)
 
 # --- DATA ---
@@ -24,7 +25,7 @@ test.y = (test.y - 48) / 48
 
 # Parameters
 learning_rate = 0.001
-training_epochs = 25L
+training_epochs = 5L
 batch_size = 50L
 display_step = 1L
 
@@ -38,7 +39,7 @@ n_classes = 30L # 15 x, 15 y coordinates
 x = tf$placeholder(tf$float32, shape(NULL, n_input))
 y = tf$placeholder(tf$float32, shape(NULL, n_classes))
 
-# Weight Initialization
+# Weight and bias convienience functions
 weight_variable <- function(shape) {
   initial <- tf$truncated_normal(shape, stddev=0.1)
   tf$Variable(initial)
@@ -49,23 +50,47 @@ bias_variable <- function(shape) {
   tf$Variable(initial)
 }
 
+# Convolution and max pooling convenience functions
+conv2d <- function(x, W) {
+  tf$nn$conv2d(x, W, strides=c(1L, 1L, 1L, 1L), padding='SAME')
+}
+
+max_pool_2x2 <- function(x) {
+  tf$nn$max_pool(
+    x,
+    ksize=c(1L, 2L, 2L, 1L),
+    strides=c(1L, 2L, 2L, 1L),
+    padding='SAME')
+}
+
 # Create model
-layer1 = tf$add(tf$matmul(x, weight_variable(shape(n_input, n_hidden_1))),
-                bias_variable(shape(n_hidden_1)))
-layer1 = tf$nn$relu(layer1)
-
-layer2 = tf$add(tf$matmul(layer1, weight_variable(shape(n_hidden_1, n_hidden_2))),
-                bias_variable(shape(n_hidden_2)))
-layer2 = tf$nn$relu(layer2)
-
-out_layer = tf$matmul(layer2, weight_variable(shape(n_hidden_2, n_classes))) +
-            bias_variable(shape(n_classes))
+## First layer
+W_conv1 <- weight_variable(shape(5L, 5L, 1L, 32L))
+b_conv1 <- bias_variable(shape(32L))
+x_image <- tf$reshape(x, shape(-1L, 96L, 96L, 1L))
+h_conv1 <- tf$nn$relu(conv2d(x_image, W_conv1) + b_conv1)
+h_pool1 <- max_pool_2x2(h_conv1)
+## Second layer
+W_conv2 <- weight_variable(shape = shape(5L, 5L, 32L, 64L))
+b_conv2 <- bias_variable(shape = shape(64L))
+h_conv2 <- tf$nn$relu(conv2d(h_pool1, W_conv2) + b_conv2)
+h_pool2 <- max_pool_2x2(h_conv2)
+## Densely connected layer
+W_fc1 <- weight_variable(shape(36864L, 1024L))
+b_fc1 <- bias_variable(shape(1024L))
+h_pool2_flat <- tf$reshape(h_pool2, shape(-1L, 24L * 24L * 64L))
+h_fc1 <- tf$nn$relu(tf$matmul(h_pool2_flat, W_fc1) + b_fc1)
+## Dropout
+keep_prob <- tf$placeholder(tf$float32)
+h_fc1_drop <- tf$nn$dropout(h_fc1, keep_prob)
+## Readout layer
+W_fc2 <- weight_variable(shape(1024L, 30L))
+b_fc2 <- bias_variable(shape(30L))
+y_conv <- tf$nn$softmax(tf$matmul(h_fc1_drop, W_fc2) + b_fc2)
 
 # Define loss and optimizer
-cost = tf$reduce_mean(tf$square(out_layer - y))
+cost = tf$reduce_mean(tf$square(y_conv - y))
 optimizer = tf$train$AdamOptimizer(learning_rate = learning_rate)$minimize(cost)
-# y_mean = tf$reduce_mean(y)
-# r_squared = tf$reduce_sum(tf$square(out_layer - y_mean)) / tf$reduce_sum(tf$square(y - y_mean))
 accuracy = tf$sqrt(cost) * 48
 
 # Initialize graph
@@ -90,19 +115,19 @@ for(epoch in seq_len(training_epochs)) {
   for(batchNr in seq_len(numberOfBatches)) {
     rowIndices = nextBatchIndices(shuffledIndices, batchNr, batch_size)
 
-    train_accuracy <- sess$run(accuracy, feed_dict = dict(x = train.x[rowIndices, ], y = train.y[rowIndices, ]))
+    train_accuracy <- sess$run(accuracy, feed_dict = dict(x = train.x[rowIndices, ], y = train.y[rowIndices, ], keep_prob = 1.0))
     cat(sprintf("Epoch: %d | Batch: %d/%d | Training RMSE: %g\n", epoch, batchNr, numberOfBatches, train_accuracy))
 
-    sess$run(optimizer, feed_dict = dict(x = train.x[rowIndices, ], y = train.y[rowIndices, ]))
+    sess$run(optimizer, feed_dict = dict(x = train.x[rowIndices, ], y = train.y[rowIndices, ], keep_prob = 0.5))
   }
 }
 
-test_accuracy <- sess$run(accuracy, feed_dict = dict(x = test.x, y = test.y))
+test_accuracy <- sess$run(accuracy, feed_dict = dict(x = test.x, y = test.y, keep_prob = 1.0))
 cat(sprintf("Test RMSE: %g", test_accuracy))
 
 # Plot on first test image
 data = test.x * 255
-pred = sess$run(out_layer, feed_dict = dict(x = test.x)) * 48 + 48
+pred = sess$run(y_conv, feed_dict = dict(x = test.x, keep_prob = 1.0)) * 48 + 48
 plotFacialKeypoints(data, 1, pred)
 
 # # Save data
@@ -116,5 +141,5 @@ plotFacialKeypoints(data, 1, pred)
 #
 # # Make submission file
 # data = d.test$Image / 255
-# pred = sess$run(out_layer, feed_dict = dict(x = data)) * 48 + 48
+# pred = sess$run(y_conv, feed_dict = dict(x = data)) * 48 + 48
 # writeSubmissionFile(predictions = pred, "/Users/henry/fkdr_submissions/")
