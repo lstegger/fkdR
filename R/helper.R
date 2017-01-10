@@ -31,8 +31,13 @@ init <- function(data.dir = NULL, data.raw.dir = NULL, submission.dir = NULL) {
     submission.dir <<- paste0(system.file("submission", package="fkdR"), "/")
   }
 
+  data(faces.test)
+  data(faces.test.equalized)
+  data(faces.train)
+  data(faces.train.equalized)
+
   # list the coordinates we have to predict
-  # coordinate.names <<- gsub("_x", "", names(d.train)[grep("_x", names(d.train))])
+  coordinate.names <<- gsub("_x", "", names(d.train)[grep("_x", names(d.train))])
 }
 
 #' @title Plot some images incl. keypoints
