@@ -1,5 +1,17 @@
+
+#' Title
+#'
+#' @param f
+#' @param d.tr
+#' @param patch_size
+#' @param search_size
+#'
+#' @return
 #' @export
+#'
+#' @examples
 patchSearch.train <- function(f, d.tr, patch_size = 10, search_size = 2) {
+  str(d.tr)
   coord = all.vars(f)[1]
 
   cat(sprintf("computing mean patch for %s\n", coord))
@@ -8,10 +20,10 @@ patchSearch.train <- function(f, d.tr, patch_size = 10, search_size = 2) {
 
   # compute average patch
   patches <- foreach (i = 1:nrow(d.tr), .combine=rbind) %do% {
+    if ((i %% 100)==0) { cat(sprintf("Extracting %s patch from training image %d/%d\n", coord, i, nrow(d.tr))) }
     im  <- matrix(data = d.tr[i,"Image"], nrow=96, ncol=96)
     # image(1:96, 1:96, im, col=gray((0:255)/255), xaxt = "n", yaxt = "n", ann = FALSE, breaks = 0:256)
     xy  <- d.tr[i, coord]
-    print(xy)
     x   <- xy %/% 96 + 1
     y   <- xy %% 96
     x1  <- (x-patch_size)
@@ -34,10 +46,21 @@ patchSearch.train <- function(f, d.tr, patch_size = 10, search_size = 2) {
   mean.patch
 }
 
+#' Title
+#'
+#' @param model
+#' @param f
+#' @param d.te
+#' @param patch_size
+#' @param search_size
+#'
+#' @return
 #' @export
+#'
+#' @examples
 patchSearch.predict <- function(model, f, d.te, patch_size = 10, search_size = 2)  {
+  str(d.te)
   mean.patch = model$learner.model
-  print(patch_size)
 
   # the coordinates we want to predict
   coord = all.vars(f)[1]
@@ -48,25 +71,40 @@ patchSearch.predict <- function(model, f, d.te, patch_size = 10, search_size = 2
   mean_x  <- mean(d.train[, coord_x], na.rm=T)
   mean_y  <- mean(d.train[, coord_y], na.rm=T)
 
+  # str(mean_x)
+  # str(mean_y)
+  # str(patch_size)
+  # str(search_size)
+
   # search space: 'search_size' pixels centered on the average coordinates
   x1 <- as.integer(mean_x)-search_size
   x2 <- as.integer(mean_x)+search_size
   y1 <- as.integer(mean_y)-search_size
   y2 <- as.integer(mean_y)+search_size
 
+  # str(x1)
+  # str(y1)
+  # str(x2)
+  # str(y2)
+
   # ensure we only consider patches completely inside the image
   x1 <- ifelse(x1-patch_size<1,  patch_size+1,  x1)
   y1 <- ifelse(y1-patch_size<1,  patch_size+1,  y1)
   x2 <- ifelse(x2+patch_size>96, 96-patch_size, x2)
   y2 <- ifelse(y2+patch_size>96, 96-patch_size, y2)
+#
+#   str(x1)
+#   str(y1)
+#   str(x2)
+#   str(y2)
 
   # build a list of all positions to be tested
   params <- expand.grid(x = x1:x2, y = y1:y2)
 
   # for each image...
   r <- foreach(i = 1:nrow(d.te), .combine=rbind) %do% {
-    im <- matrix(data = d.te[i, ], nrow=96, ncol=96)
-    if ((i %% 100)==0) { cat(sprintf("%d/%d\n", i, nrow(d.te))) }
+    im <- matrix(data = d.te[i, "Image"], nrow=96, ncol=96)
+    if ((i %% 100)==0) { cat(sprintf("Predicting %s for test image %d/%d\n", coord, i, nrow(d.te))) }
 
     # ... compute a score for each position ...
     r  <- foreach(j = 1:nrow(params), .combine=rbind) %do% {
@@ -77,11 +115,9 @@ patchSearch.predict <- function(model, f, d.te, patch_size = 10, search_size = 2
       score <- ifelse(is.na(score), 0, score)
       data.frame(x, y, score)
     }
-    str(r)
 
     # ... and return the best
     best <- r[which.max(r$score), c("x", "y")]
-    str(best)
     best
   }
 
@@ -92,7 +128,12 @@ patchSearch.predict <- function(model, f, d.te, patch_size = 10, search_size = 2
 
 
 
+#' Title
+#'
+#' @return
 #' @export
+#'
+#' @examples
 makeRLearner.regr.patchSearch = function() {
   makeRLearnerRegr(
     cl = "regr.patchSearch",
@@ -110,22 +151,52 @@ makeRLearner.regr.patchSearch = function() {
 
 #' @export
 trainLearner.regr.patchSearch = function(.learner, .task, .subset, ...) {
+  str(.subset)
   patchSearch.train(f = getTaskFormula(.task),
                     d.tr = getTaskData(.task, .subset),
                     ...)
 }
 
+#' Title
+#'
+#' @param .learner
+#' @param .model
+#' @param .newdata
+#' @param ...
+#'
+#' @return
 #' @export
+#'
+#' @examples
 predictLearner.regr.patchSearch = function(.learner, .model, .newdata, ...) {
+  str(.newdata)
+  .patch_size = .model$learner$par.vals$patch_size
+  .search_size = .model$learner$par.vals$search_size
+
+  .patch_size = ifelse(is.null(.patch_size), 10, .patch_size)
+  .search_size = ifelse(is.null(.search_size), 2, .search_size)
+
   patchSearch.predict(.model,
                       f = getTaskFormula(.model$task.desc),
                       d.te = .newdata,
-                      patch_size = .model$learner$par.vals$patch_size,
-                      search_size = .model$learner$par.vals$search_size,
+                      patch_size = .patch_size,
+                      search_size = .search_size,
                       ...)
 }
 
 ## Define a function that calculates the misclassification rate
+#' Title
+#'
+#' @param task
+#' @param model
+#' @param pred
+#' @param feats
+#' @param extra.args
+#'
+#' @return
+#' @export
+#'
+#' @examples
 rmse2d.fun = function(task, model, pred, feats, extra.args) {
   response = data.frame(
     x = getPredictionResponse(pred) %% 96 + 1,
@@ -142,9 +213,17 @@ rmse2d.fun = function(task, model, pred, feats, extra.args) {
 }
 
 ## Generate the Measure object
-rmse2d = makeMeasure(
-  id = "rmse2d", name = "Root Mean Squared Error for 2-dimensional data",
-  properties = c("regr", "req.pred", "req.truth"),
-  minimize = TRUE, best = 0, worst = Inf,
-  fun = rmse2d.fun
-)
+#' Title
+#'
+#' @return
+#' @export
+#'
+#' @examples
+rmse2d = function() {
+  mlr::makeMeasure(
+    id = "rmse2d", name = "Root Mean Squared Error for 2-dimensional data",
+    properties = c("regr", "req.pred", "req.truth"),
+    minimize = TRUE, best = 0, worst = Inf,
+    fun = rmse2d.fun
+  )
+}
