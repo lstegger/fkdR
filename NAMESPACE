@@ -3,7 +3,6 @@
 export(imagesToPdf)
 export(init)
 export(plotFacialKeypoints)
-export(predict)
 export(prep.equalize)
 export(processRawData)
 export(writeSubmissionFile)

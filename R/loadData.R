@@ -46,4 +46,3 @@ processRawData <- function() {
   colnames(df) <- coordinate.names
   d.train <<- cbind(d.train, df)
 }
-

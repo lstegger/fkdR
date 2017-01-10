@@ -9,7 +9,7 @@ zeroNAindices = which(rowSums(is.na(d.train)) == 0)
 train.x = train.x[zeroNAindices, ]
 train.y = train.y[zeroNAindices, ]
 # Simple split for now
-trainIndices = sample(1:nrow(train.x), size = round(0.7 * nrow(train.x)), replace=FALSE)
+# trainIndices = sample(1:nrow(train.x), size = round(0.7 * nrow(train.x)), replace=FALSE)
 train.x = train.x[trainIndices, ]
 test.x = train.x[-trainIndices, ]
 train.y = train.y[trainIndices, ]
@@ -24,7 +24,8 @@ test.y = (test.y - 48) / 48
 
 # Parameters
 learning_rate = 0.001
-training_epochs = 25L
+training_epochs = 1000L
+
 batch_size = 50L
 display_step = 1L
 
@@ -102,8 +103,8 @@ cat(sprintf("Test RMSE: %g", test_accuracy))
 
 # Plot on first test image
 data = test.x * 255
-pred = sess$run(out_layer, feed_dict = dict(x = test.x)) * 48 + 48
-plotFacialKeypoints(data, 1, pred)
+pred = out_layer$eval(feed_dict = dict(x = test.x)) * 48 + 48
+plotFacialKeypoints(data, 100, pred)
 
 # # Save data
 # saver <- tf$train$Saver()

@@ -1,7 +1,4 @@
-#' @export
-predict <- function(method = 'patch', ...) {
 
-}
 
 #' @export
 writeSubmissionFile <- function(predictions, submission.dir, filename = "submission.csv") {
@@ -18,5 +15,11 @@ writeSubmissionFile <- function(predictions, submission.dir, filename = "submiss
   submission = submission[, sub.col.names]
   submission$ImageId = NULL
   submission$FeatureName = NULL
+
+  # check if values are in [0, 96]
+  lower0 = which(submission$Location <  0)
+  submission[lower0, 2] =  0
+  submission[which(submission$Location > 96), 2] = 96
+
   write.csv(submission, file=paste0(submission.dir, filename), quote=F, row.names=F)
 }
