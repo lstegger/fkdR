@@ -1,0 +1,29 @@
+---
+title: "Facial Keypoint Detection - Documentation"
+author: "Henry Perschk, Lucas Stegger"
+date: "7 1 2017"
+output: 
+  pdf_document:
+    keep_tex: yes
+    number_sections: yes
+    toc: yes
+    toc_depth: 2
+---
+
+# Introduction
+
+# Preprocessing
+
+# Methodology
+
+## Patch Search
+
+## Convolutional Neural Net
+
+# Model Training
+
+# Prediction
+
+# Discussion and Comparison
+
+# Conclusion

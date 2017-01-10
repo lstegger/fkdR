@@ -1,0 +1,25 @@
+\begin{thebibliography}{3}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{{\tt #1}}
+\providecommand{\urlprefix}{URL: }
+\providecommand{\urldateprefix}{Access date: }
+
+\bibitem[{Becker and Kahn(2011)}]{Becker2011}
+Becker, J., and Kahn, D. 2011. \enquote{{The Process in Focus},} in {\it
+  Process Management: A Guide for the Design of Business Processes\/},
+  J.~Becker, M.~Kugeler, and M.~Rosemann,  (eds.), Berlin, Heidelberg:
+  Springer, pp. 1--13, 2nd ed.
+
+\bibitem[{Hammer(2015)}]{Hammer2015}
+Hammer, M. 2015. \enquote{{What is Business Process Management?}} in {\it
+  Handbook on Business Process Management 1\/}, J.~{Vom Brocke} and
+  M.~Rosemann,  (eds.), Berlin, Heidelberg: Springer, chap.~1, pp. 3--16, 2nd
+  ed.
+
+\bibitem[{vom Brocke et~al.(2014)vom Brocke, Schmiedel, Recker, Trkman,
+  Mertens, and Viaene}]{VomBrocke2014a}
+vom Brocke, J., Schmiedel, T., Recker, J., Trkman, P., Mertens, W., and Viaene,
+  S. 2014. \enquote{{Ten Principles of Good Business Process Management},} {\it
+  Business Process Management Journal\/} (20:4), pp. 530--548.
+
+\end{thebibliography}

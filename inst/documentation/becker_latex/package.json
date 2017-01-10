@@ -1,0 +1,23 @@
+{
+  "name": "isthesis",
+  "version": "0.1.0",
+  "main": "Gruntfile.js",
+  "readme": "build/00_thesis.pdf",
+  "dependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-concat": "^0.5.1",
+    "grunt-contrib-watch": "~0.6.1",
+    "grunt-tex-pdflatex": "~0.2.0",
+	"grunt-tex-glossaries": "~0.2.0",
+	"grunt-tex-bibtex": "~0.2.0",
+	"grunt-tex-wordcount": "~0.1.0"
+	
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@wiwi-gitlab.uni-muenster.de:lsis/isthesis.git"
+  },
+  "author": "Jan Betzing",
+  "license": "MIT",
+  "description": "LaTeX template for writing bachelor, master, and seminar theses at the Chair for Information Systems and Information Management."
+}
