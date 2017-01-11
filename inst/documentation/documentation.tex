@@ -125,12 +125,13 @@
 
 
 \begin{document}
-\maketitle
 
 {
 \setcounter{tocdepth}{2}
 \tableofcontents
 }
+
+\newpage
 \section{Introduction}\label{introduction}
 
 The fkdR (short for Facial Keypoints Detection in R) package is intended
@@ -148,13 +149,6 @@ based on the
 \href{https://www.kaggle.com/c/facial-keypoints-detection}{Facial
 Keypoints Detection contest} posted on Kaggle.
 
-\begin{itemize}
-\tightlist
-\item
-  structure of package?
-\item
-  structure of documentation
-\end{itemize}
 
 \section{Loading and Preprocessing the
 Data}\label{loading-and-preprocessing-the-data}
@@ -393,7 +387,7 @@ internally in \texttt{mlR} and can be accessed during the predictions.
 
 \begin{figure}
 \centering
-\includegraphics{figures/mouth_15.pdf}
+\includegraphics[width=0.5\textwidth]{figures/mouth_15.pdf}
 \caption{Mean patch for mouth center top lip with `patch\_size = 15'}
 \end{figure}
 
