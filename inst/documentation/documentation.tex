@@ -128,7 +128,7 @@
 \maketitle
 
 {
-\setcounter{tocdepth}{3}
+\setcounter{tocdepth}{2}
 \tableofcontents
 }
 \section{Introduction}\label{introduction}
@@ -548,7 +548,7 @@ which will be described in the following.
 \subsection{Multi-Layer Perceptron
 (MLP)}\label{multi-layer-perceptron-mlp}
 
-\subsection{Data Preparation}\label{data-preparation}
+\subsubsection{Data Preparation}\label{data-preparation}
 
 After loading the tensorflow package
 
@@ -589,7 +589,7 @@ most point is +1. Each of the target values is scaled into this {[}-1,
 \end{Highlighting}
 \end{Shaded}
 
-\subsection{Hyperparameters}\label{hyperparameters}
+\subsubsection{Hyperparameters}\label{hyperparameters}
 
 We control four different hyperparameters, that can be adapted once we
 decided for a certain network structure:
@@ -622,7 +622,7 @@ decided for a certain network structure:
 \end{Highlighting}
 \end{Shaded}
 
-\subsection{Network Structure}\label{network-structure}
+\subsubsection{Network Structure}\label{network-structure}
 
 We experimented with different depths of the network but realized
 quickly that training on a CPU (as opposed to a GPU) puts certain limits
@@ -638,7 +638,7 @@ following structure (in combination with the above hyperparameters).
 \end{Highlighting}
 \end{Shaded}
 
-\subsection{Tensorflow Graph}\label{tensorflow-graph}
+\subsubsection{Tensorflow Graph}\label{tensorflow-graph}
 
 First we create some placeholder variables to hold the input (x) and the
 output (y).
@@ -722,7 +722,7 @@ is launched and the TF variables we just created are initialized.
 \end{Highlighting}
 \end{Shaded}
 
-\subsection{Training and Evaluating the
+\subsubsection{Training and Evaluating the
 Model}\label{training-and-evaluating-the-model}
 
 First we define a function that makes it easy to pass batches into the
@@ -803,7 +803,7 @@ the purpose of rescaling.
 \end{Highlighting}
 \end{Shaded}
 
-\subsection{Submission File}\label{submission-file}
+\subsubsection{Submission File}\label{submission-file}
 
 Using the fkdR package, creating a submission file for the Kaggle
 competition only takes three simple steps. First, the test data set has
@@ -820,7 +820,7 @@ function has to be called.
 \end{Highlighting}
 \end{Shaded}
 
-\subsection{Save and Restore}\label{save-and-restore}
+\subsubsection{Save and Restore}\label{save-and-restore}
 
 Finally, we made an effort to save and restore the TF model (including
 the trained weights and biases), so that there is no data loss after
@@ -843,22 +843,22 @@ Unfortunately, this (as of now) leads to unexpected behavior, although
 the code should be correct. We filed a Github issue for this and are in
 a conversation with two of the lead RStudio/Tensorflow programmers.
 
-\section{Convolutional Neural Network
+\subsection{Convolutional Neural Network
 (CNN)}\label{convolutional-neural-network-cnn}
 
 In order to build a convolutional neural network, we need two more
 convenience functions and of course a different layer structure.
 
-\subsection{Convolution, Max Pooling, Dropout and Fully Connected
+\subsubsection{Convolution, Max Pooling, Dropout and Fully Connected
 Layer}\label{convolution-max-pooling-dropout-and-fully-connected-layer}
 
 In the following, the process of convolution and pooling will be
 described in general, followed by the code that implements the
 theoretical excursion.
 
-\subsubsection{Theory}\label{theory}
+\paragraph{Theory}\label{theory}
 
-\paragraph{Convolution}\label{convolution}
+\subparagraph{Convolution}\label{convolution}
 
 A convolutional layer is essentially a set of so called filters, which
 can be trained. In contrast to traditional image recognition techniques,
@@ -894,7 +894,7 @@ It is common to pad the image with zeros around the edges in order for
 the convolution operation not to alter the spatial dimensions of the
 input.
 
-\paragraph{Max Pooling}\label{max-pooling}
+\subparagraph{Max Pooling}\label{max-pooling}
 
 Max Pooling is a way to reduce the size of the feature map. Again, we
 slide a window (typically 2x2 pixels) across the image/activation map
@@ -907,7 +907,7 @@ cost, as less parameters have to be trained for the individual image
 maps and it helps to reduce overfitting, as the information gets more
 abstract.
 
-\paragraph{Dropout}\label{dropout}
+\subparagraph{Dropout}\label{dropout}
 
 Dropout is another regularization technique, that works very well for
 \href{http://neuralnetworksanddeeplearning.com/chap3.html}{various
@@ -915,7 +915,7 @@ reasons}. Essentially, it forces the neural net to learn multiple
 independent representations of the same data by alternately randomly
 disabling neurons in the learning phase.
 
-\paragraph{Fully Connected Layer}\label{fully-connected-layer}
+\subparagraph{Fully Connected Layer}\label{fully-connected-layer}
 
 The last (several) layer(s) of a convolutional net is a fully connected
 layer. Already known from the Multi-Layer Perceptron, it connects all
@@ -935,9 +935,9 @@ very last step.
 2017}
 \end{figure}
 
-\subsubsection{Practice}\label{practice}
+\paragraph{Practice}\label{practice}
 
-\paragraph{Convenience Functions}\label{convenience-functions}
+\subparagraph{Convenience Functions}\label{convenience-functions}
 
 In addition to the \emph{weight\_variable} and \emph{bias\_variable}
 functions, we create functions to handle convolution and max pooling.
@@ -960,7 +960,7 @@ for convolution, and we use 2x2 max pooling.
 \end{Highlighting}
 \end{Shaded}
 
-\paragraph{Tensorflow Graph
+\subparagraph{Tensorflow Graph
 Definition}\label{tensorflow-graph-definition}
 
 We stack several of the layer types described in the \textbf{Theory}
