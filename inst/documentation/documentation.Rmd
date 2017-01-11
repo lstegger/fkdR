@@ -34,14 +34,14 @@ The patch search learner we implemented is based on the [Getting Started Tutoria
 
 The basic idea behind the patch search learner is to extract all pixels with a specific radius around each keypoint in each image. The extracted pixels are refered to as patch. Afterwards, for each keypoint the mean patch is calculated by calculating the mean of each pixel. This mean patch can in a next step be used on any image containing the keypoint (assuming it is also a 96x96 pixel grayscale image, where the face ideally covers the whole width and height of the image and is horizontally aligned). Predicting the keypoint is achieved by running through the desired image pixel by pixel and again extracting the the patch around this pixel. The point, where the extracted patch best matches the trained mean patch is used as prediction.
 
-## Training a Patch for a Facial Keypoint
+## Training a Patch for a Facial Keypoint{#patch-search-train}
 As indicated the first step is to extract the patch for each keypoint from each training image. One limitation using mlR was, that mlR as of now does not offer an interface for regression with more than one targets. This becomes a problem, as we are trying to train and predict 15 keypoints which consist of two coordinates. As explained in section 2, we solved the problem of predicting two coordinates by transforming the two coordinates into one value. As long as the width and height of the images is known, this value can easily be converted back to two coordinates. 
 
 The problem of having 15 different keypoints can be solved by training 15 models for only one keypoint each. Normally, this can be a limitation, because the information where the eyes lie for example might give us some information about the location of the nose tip. As the Patch Search Learner is not able to respect these interdependencies, we can ignore this disadvantage. However, it has to be kept in mind and one might have to think of a different solution when using advaned learners, that are able to respect these interdependencies. One solution could be to extend the mlR functionality by an interface for multi-target regression.
 
 Furthermore, all patches are squares where the center point is the keypoint and the width as well as height are calculated by `patch_size * 2 + 1`. This allows easier handling and storing of the patch as it would be the case with a circle. The variable `patch_size` is therefore the first of two hyperparameters the Patch Search Learner provides. 
 
-Based on the aforementioned assumptions the learner is implemented. First, a new mlR learner is initialized by `makeRLearnerRegr()' as a regression learner. As indicated in the code below the two hyperparameters are defined in this function. The 'search_size' hyperparameter is relevant for the predictions and will therefore further explained during the next section. 
+Based on the aforementioned assumptions the learner is implemented. First, a new mlR learner is initialized by `makeRLearnerRegr()' as a regression learner. As indicated in the code below the two hyperparameters are defined in this function. The 'search_size' hyperparameter is relevant for the predictions and will therefore further explained during the [section 3.2](#patch-search-pred). 
 
 ```{r}
 makeRLearner.regr.patchSearch = function() {
@@ -128,9 +128,99 @@ As soon as all patches are extracted, we can calculate the mean of them. At this
 
 ![Mean patch for mouth center top lip with 'patch_size = 15'](figures/mouth_15.pdf)
 
+## Predicting a Facial Keypoint using a Patch{#patch-search-pred}
+Having computed the mean patch for a particular keypoint, we can start with predictons. For the predictions we run through the images and search for the best match of the mean patch. As it would be very inefficient and expensive to compare the match to all possible patch positions, the Patch Search Learner only searches around the mean keypoint positions of the training dataset. The size of the area around this mean keypoint, where the learner searches, is determined by the hyperparameter `search_size`. Similar to the identification of the outer coordinates of the patch, the search area is determined by setting its center to the mean position and the width and height to `2 * search_size + 1`. Afterwards the algorithm runs through every pixel in the search area and the mean patch's center is set to the pixel in order to calculate the match. The position in the search area with the best match is used as prediction. 
+
+Again we are using the `mlR` interface to provide the functionality. Therefore, we define the following function to make the prediction part of the learner available to `mlR`. Before handing over the data to our custom function, we extract the hyperparameters of the current model and to be sure they have some value set them to the default values in case they are `NULL`.
+
+```{r}
+predictLearner.regr.patchSearch = function(.learner, .model, .newdata, ...) {
+  .patch_size = .model$learner$par.vals$patch_size
+  .search_size = .model$learner$par.vals$search_size
+
+  .patch_size = ifelse(is.null(.patch_size), 10, .patch_size)
+  .search_size = ifelse(is.null(.search_size), 2, .search_size)
+
+  patchSearch.predict(.model,
+                      f = getTaskFormula(.model$task.desc),
+                      d.te = .newdata,
+                      patch_size = .patch_size,
+                      search_size = .search_size,
+                      ...)
+}
+```
+
+Our custom function accepts the model, the formula, test data and the hyperparameters as parameters. First, the mean patch is extracted from the model and the target variable name is read from the formula. 
+
+```{r}
+patchSearch.predict <- function(model, f, d.te, patch_size = 10, search_size = 2)  {
+  mean.patch = model$learner.model
+
+  # the coordinates we want to predict
+  coord = all.vars(f)[1]
+  coord_x <- paste(coord, "x", sep="_")
+  coord_y <- paste(coord, "y", sep="_")
+```
+
+Now the mean of the x and y coordinate is calculated based on the training data. By using the hyperparameter `search_size` we can calculate the search area. As the mean positions of a keypoint could lie so close to the border, that the patch would not lie completely inside the image, we have to cut the search area by these pixels. The variable `params` then contains all coordinates in the search area.
+
+```{r}
+  # the average of them in the training set (our starting point)
+  mean_x  <- mean(d.train[, coord_x], na.rm=T)
+  mean_y  <- mean(d.train[, coord_y], na.rm=T)
+
+  # search space: 'search_size' pixels centered on the average coordinates
+  x1 <- as.integer(mean_x)-search_size
+  x2 <- as.integer(mean_x)+search_size
+  y1 <- as.integer(mean_y)-search_size
+  y2 <- as.integer(mean_y)+search_size
+
+  # ensure we only consider patches completely inside the image
+  x1 <- ifelse(x1-patch_size<1,  patch_size+1,  x1)
+  y1 <- ifelse(y1-patch_size<1,  patch_size+1,  y1)
+  x2 <- ifelse(x2+patch_size>96, 96-patch_size, x2)
+  y2 <- ifelse(y2+patch_size>96, 96-patch_size, y2)
+
+  # build a list of all positions to be tested
+  params <- expand.grid(x = x1:x2, y = y1:y2)
+```
+
+We can now run through all test images and search for the best match of the models mean patch in the search area. The outer loop is responsible for running through the images, whereas the inner loop runs through all coordinate combinations in the search area. For each coordinate combination the patch with the same size as the models mean patch is extracted. Both, the extracted patch and the mean patch are then converted to a vector and the match between them is calculated by the correlation amongst them. Afterwards, the coordinates and the correlation is stored in a data frame, such that we can easily extract the coordinates with the highest correlation value. The final step is to retransform the two coordinates back to a single value to make them compatible with the general data format we agreed upon. Thus, we have our prediction. 
+
+```{r}
+  # for each image...
+  r <- foreach(i = 1:nrow(d.te), .combine=rbind) %do% {
+    im <- matrix(data = d.te[i, "Image"], nrow=96, ncol=96)
+    if ((i %% 100)==0) { cat(sprintf("Predicting %s for test image %d/%d\n", 
+                                     coord, i, nrow(d.te))) }
+
+    # ... compute a score for each position ...
+    r  <- foreach(j = 1:nrow(params), .combine=rbind) %do% {
+      x     <- params$x[j]
+      y     <- params$y[j]
+      p     <- im[(x-patch_size):(x+patch_size), (y-patch_size):(y+patch_size)]
+      score <- cor(as.vector(p), as.vector(mean.patch))
+      score <- ifelse(is.na(score), 0, score)
+      data.frame(x, y, score)
+    }
+
+    # ... and return the best
+    best <- r[which.max(r$score), c("x", "y")]
+    best
+  }
+
+  # retransform to single value
+  result <- (round(r[1]) - 1) * 96 + round(r[2])
+  result[1]$x
+}
+```
+
 # Tensorflow...
 
 
 # Discussion and Comparison
+Patch Search
+* Patch Search is a rather simple yet effective and intuitive approach
+* limitations (composition of image, limited search area (pros and cons!, search area at the borders), rotation, etc.. )
 
-# Conclusion
+# Conclusion and Outlook
