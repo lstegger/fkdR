@@ -25,7 +25,7 @@ test.y = (test.y - 48) / 48
 
 # Parameters
 learning_rate = 0.001
-training_epochs = 5L
+training_epochs = 25L
 batch_size = 50L
 display_step = 1L
 
