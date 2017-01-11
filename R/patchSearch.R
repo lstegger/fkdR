@@ -15,17 +15,18 @@ patchSearch.train <- function(f, d.tr, patch_size = 10, search_size = 2) {
   coord = all.vars(f)[1]
 
   cat(sprintf("computing mean patch for %s\n", coord))
-  coord_x <- paste(coord, "x", sep="_")
-  coord_y <- paste(coord, "y", sep="_")
 
   # compute average patch
   patches <- foreach (i = 1:nrow(d.tr), .combine=rbind) %do% {
     if ((i %% 100)==0) { cat(sprintf("Extracting %s patch from training image %d/%d\n", coord, i, nrow(d.tr))) }
     im  <- matrix(data = d.tr[i,"Image"], nrow=96, ncol=96)
-    # image(1:96, 1:96, im, col=gray((0:255)/255), xaxt = "n", yaxt = "n", ann = FALSE, breaks = 0:256)
+
+    # transform to x and y coordinate
     xy  <- d.tr[i, coord]
     x   <- xy %/% 96 + 1
     y   <- xy %% 96
+
+    # determine outer coordinates of patch
     x1  <- (x-patch_size)
     x2  <- (x+patch_size)
     y1  <- (y-patch_size)
@@ -131,7 +132,7 @@ makeRLearner.regr.patchSearch = function() {
       makeNumericLearnerParam(id = "patch_size", default = 10, lower = 0, tunable = TRUE),
       makeNumericLearnerParam(id = "search_size", default = 2, lower = 1, tunable = TRUE)
     ),
-    properties = c("numerics", "factors"),
+    properties = c("numerics"),
     name = "Patch Search Learner for Keypoint Detection in Images",
     short.name = "patchSearch",
     note = ""
