@@ -203,6 +203,7 @@ Dropout is another regularization technique, that works very well for [various r
 The last (several) layer(s) of a convolutional net is a fully connected layer. Already known from the Multi-Layer Perceptron, it connects all nodes (30 in the current case) with all nodes from the previous layer.
 
 The following image compares an abstract representation of a MLP vs. a CNN. The right side shows how the pooling operation reshapes the volume of activation maps, as the images get smaller and smaller. A fully connected layer as seen on the left side is also added in a CNN as the very last step.
+
 ![Andrej Karpathy, http://cs231n.github.io/convolutional-networks/ retreived on 7 Jan 2017](./mlp_vs_cnn.png)
 
 #### Practice
