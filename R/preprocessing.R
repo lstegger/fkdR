@@ -26,7 +26,3 @@ prep.equalize <- function() {
   save(im.train.equalized, file=paste0(data.dir, 'faces.train.equalized.RData'), compress = TRUE)
 }
 
-# outlook:
-# - mirrored copies as further inputs
-# - find face(s) and crop (too complex for now)
-# - horizontal alignment (probably not easy on test images)
