@@ -62,18 +62,20 @@ max_pool_2x2 <- function(x) {
 }
 
 # Create model
-## First layer
+## First layer (convolution)
 W_conv1 <- weight_variable(shape(5L, 5L, 1L, 32L))
 b_conv1 <- bias_variable(shape(32L))
 x_image <- tf$reshape(x, shape(-1L, 96L, 96L, 1L))
 h_conv1 <- tf$nn$relu(conv2d(x_image, W_conv1) + b_conv1)
+## Second layer (pooling)
 h_pool1 <- max_pool_2x2(h_conv1)
-## Second layer
+## Third layer (convolution)
 W_conv2 <- weight_variable(shape = shape(5L, 5L, 32L, 64L))
 b_conv2 <- bias_variable(shape = shape(64L))
 h_conv2 <- tf$nn$relu(conv2d(h_pool1, W_conv2) + b_conv2)
+## Fourth layer (pooling)
 h_pool2 <- max_pool_2x2(h_conv2)
-## Densely connected layer
+## Fifth layer (densely connected)
 W_fc1 <- weight_variable(shape(36864L, 1024L))
 b_fc1 <- bias_variable(shape(1024L))
 h_pool2_flat <- tf$reshape(h_pool2, shape(-1L, 24L * 24L * 64L))
@@ -81,10 +83,10 @@ h_fc1 <- tf$nn$relu(tf$matmul(h_pool2_flat, W_fc1) + b_fc1)
 ## Dropout
 keep_prob <- tf$placeholder(tf$float32)
 h_fc1_drop <- tf$nn$dropout(h_fc1, keep_prob)
-## Readout layer
+## Sixth layer (readout)
 W_fc2 <- weight_variable(shape(1024L, 30L))
 b_fc2 <- bias_variable(shape(30L))
-y_conv <- tf$nn$softmax(tf$matmul(h_fc1_drop, W_fc2) + b_fc2)
+y_conv <- tf$matmul(h_fc1_drop, W_fc2) + b_fc2
 
 # Define loss and optimizer
 cost = tf$reduce_mean(tf$square(y_conv - y))
