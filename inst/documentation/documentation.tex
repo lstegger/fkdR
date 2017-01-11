@@ -202,7 +202,7 @@ patch around this pixel. The point, where the extracted patch best
 matches the trained mean patch is used as prediction.
 
 \subsection{Training a Patch for a Facial
-Keypoint}\label{training-a-patch-for-a-facial-keypoint}
+Keypoint}\label{patch-search-train}
 
 As indicated the first step is to extract the patch for each keypoint
 from each training image. One limitation using mlR was, that mlR as of
@@ -237,7 +237,8 @@ First, a new mlR learner is initialized by `makeRLearnerRegr()`as a
 regression learner. As indicated in the code below the two
 hyperparameters are defined in this function. The 'search\_size'
 hyperparameter is relevant for the predictions and will therefore
-further explained during the next section.
+further explained during the
+\protect\hyperlink{patch-search-pred}{section 3.2}.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -362,11 +363,149 @@ internally in \texttt{mlR} and can be accessed during the predictions.
 \caption{Mean patch for mouth center top lip with `patch\_size = 15'}
 \end{figure}
 
+\hypertarget{patch-search-pred}{\subsection{Predicting a Facial Keypoint
+using a Patch}\label{patch-search-pred}}
+
+Having computed the mean patch for a particular keypoint, we can start
+with predictons. For the predictions we run through the images and
+search for the best match of the mean patch. As it would be very
+inefficient and expensive to compare the match to all possible patch
+positions, the Patch Search Learner only searches around the mean
+keypoint positions of the training dataset. The size of the area around
+this mean keypoint, where the learner searches, is determined by the
+hyperparameter \texttt{search\_size}. Similar to the identification of
+the outer coordinates of the patch, the search area is determined by
+setting its center to the mean position and the width and height to
+\texttt{2\ *\ search\_size\ +\ 1}. Afterwards the algorithm runs through
+every pixel in the search area and the mean patch's center is set to the
+pixel in order to calculate the match. The position in the search area
+with the best match is used as prediction.
+
+Again we are using the \texttt{mlR} interface to provide the
+functionality. Therefore, we define the following function to make the
+prediction part of the learner available to \texttt{mlR}. Before handing
+over the data to our custom function, we extract the hyperparameters of
+the current model and to be sure they have some value set them to the
+default values in case they are \texttt{NULL}.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{predictLearner.regr.patchSearch =}\StringTok{ }\NormalTok{function(.learner, .model, .newdata, ...) \{}
+  \NormalTok{.patch_size =}\StringTok{ }\NormalTok{.model$learner$par.vals$patch_size}
+  \NormalTok{.search_size =}\StringTok{ }\NormalTok{.model$learner$par.vals$search_size}
+
+  \NormalTok{.patch_size =}\StringTok{ }\KeywordTok{ifelse}\NormalTok{(}\KeywordTok{is.null}\NormalTok{(.patch_size), }\DecValTok{10}\NormalTok{, .patch_size)}
+  \NormalTok{.search_size =}\StringTok{ }\KeywordTok{ifelse}\NormalTok{(}\KeywordTok{is.null}\NormalTok{(.search_size), }\DecValTok{2}\NormalTok{, .search_size)}
+
+  \KeywordTok{patchSearch.predict}\NormalTok{(.model,}
+                      \DataTypeTok{f =} \KeywordTok{getTaskFormula}\NormalTok{(.model$task.desc),}
+                      \DataTypeTok{d.te =} \NormalTok{.newdata,}
+                      \DataTypeTok{patch_size =} \NormalTok{.patch_size,}
+                      \DataTypeTok{search_size =} \NormalTok{.search_size,}
+                      \NormalTok{...)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+Our custom function accepts the model, the formula, test data and the
+hyperparameters as parameters. First, the mean patch is extracted from
+the model and the target variable name is read from the formula.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{patchSearch.predict <-}\StringTok{ }\NormalTok{function(model, f, d.te, }\DataTypeTok{patch_size =} \DecValTok{10}\NormalTok{, }\DataTypeTok{search_size =} \DecValTok{2}\NormalTok{)  \{}
+  \NormalTok{mean.patch =}\StringTok{ }\NormalTok{model$learner.model}
+
+  \CommentTok{# the coordinates we want to predict}
+  \NormalTok{coord =}\StringTok{ }\KeywordTok{all.vars}\NormalTok{(f)[}\DecValTok{1}\NormalTok{]}
+  \NormalTok{coord_x <-}\StringTok{ }\KeywordTok{paste}\NormalTok{(coord, }\StringTok{"x"}\NormalTok{, }\DataTypeTok{sep=}\StringTok{"_"}\NormalTok{)}
+  \NormalTok{coord_y <-}\StringTok{ }\KeywordTok{paste}\NormalTok{(coord, }\StringTok{"y"}\NormalTok{, }\DataTypeTok{sep=}\StringTok{"_"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Now the mean of the x and y coordinate is calculated based on the
+training data. By using the hyperparameter \texttt{search\_size} we can
+calculate the search area. As the mean positions of a keypoint could lie
+so close to the border, that the patch would not lie completely inside
+the image, we have to cut the search area by these pixels. The variable
+\texttt{params} then contains all coordinates in the search area.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+  \CommentTok{# the average of them in the training set (our starting point)}
+  \NormalTok{mean_x  <-}\StringTok{ }\KeywordTok{mean}\NormalTok{(d.train[, coord_x], }\DataTypeTok{na.rm=}\NormalTok{T)}
+  \NormalTok{mean_y  <-}\StringTok{ }\KeywordTok{mean}\NormalTok{(d.train[, coord_y], }\DataTypeTok{na.rm=}\NormalTok{T)}
+
+  \CommentTok{# search space: 'search_size' pixels centered on the average coordinates}
+  \NormalTok{x1 <-}\StringTok{ }\KeywordTok{as.integer}\NormalTok{(mean_x)-search_size}
+  \NormalTok{x2 <-}\StringTok{ }\KeywordTok{as.integer}\NormalTok{(mean_x)+search_size}
+  \NormalTok{y1 <-}\StringTok{ }\KeywordTok{as.integer}\NormalTok{(mean_y)-search_size}
+  \NormalTok{y2 <-}\StringTok{ }\KeywordTok{as.integer}\NormalTok{(mean_y)+search_size}
+
+  \CommentTok{# ensure we only consider patches completely inside the image}
+  \NormalTok{x1 <-}\StringTok{ }\KeywordTok{ifelse}\NormalTok{(x1-patch_size<}\DecValTok{1}\NormalTok{,  patch_size}\DecValTok{+1}\NormalTok{,  x1)}
+  \NormalTok{y1 <-}\StringTok{ }\KeywordTok{ifelse}\NormalTok{(y1-patch_size<}\DecValTok{1}\NormalTok{,  patch_size}\DecValTok{+1}\NormalTok{,  y1)}
+  \NormalTok{x2 <-}\StringTok{ }\KeywordTok{ifelse}\NormalTok{(x2+patch_size>}\DecValTok{96}\NormalTok{, }\DecValTok{96}\NormalTok{-patch_size, x2)}
+  \NormalTok{y2 <-}\StringTok{ }\KeywordTok{ifelse}\NormalTok{(y2+patch_size>}\DecValTok{96}\NormalTok{, }\DecValTok{96}\NormalTok{-patch_size, y2)}
+
+  \CommentTok{# build a list of all positions to be tested}
+  \NormalTok{params <-}\StringTok{ }\KeywordTok{expand.grid}\NormalTok{(}\DataTypeTok{x =} \NormalTok{x1:x2, }\DataTypeTok{y =} \NormalTok{y1:y2)}
+\end{Highlighting}
+\end{Shaded}
+
+We can now run through all test images and search for the best match of
+the models mean patch in the search area. The outer loop is responsible
+for running through the images, whereas the inner loop runs through all
+coordinate combinations in the search area. For each coordinate
+combination the patch with the same size as the models mean patch is
+extracted. Both, the extracted patch and the mean patch are then
+converted to a vector and the match between them is calculated by the
+correlation amongst them. Afterwards, the coordinates and the
+correlation is stored in a data frame, such that we can easily extract
+the coordinates with the highest correlation value. The final step is to
+retransform the two coordinates back to a single value to make them
+compatible with the general data format we agreed upon. Thus, we have
+our prediction.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+  \CommentTok{# for each image...}
+  \NormalTok{r <-}\StringTok{ }\KeywordTok{foreach}\NormalTok{(}\DataTypeTok{i =} \DecValTok{1}\NormalTok{:}\KeywordTok{nrow}\NormalTok{(d.te), }\DataTypeTok{.combine=}\NormalTok{rbind) %do%}\StringTok{ }\NormalTok{\{}
+    \NormalTok{im <-}\StringTok{ }\KeywordTok{matrix}\NormalTok{(}\DataTypeTok{data =} \NormalTok{d.te[i, }\StringTok{"Image"}\NormalTok{], }\DataTypeTok{nrow=}\DecValTok{96}\NormalTok{, }\DataTypeTok{ncol=}\DecValTok{96}\NormalTok{)}
+    \NormalTok{if ((i %%}\StringTok{ }\DecValTok{100}\NormalTok{)==}\DecValTok{0}\NormalTok{) \{ }\KeywordTok{cat}\NormalTok{(}\KeywordTok{sprintf}\NormalTok{(}\StringTok{"Predicting %s for test image %d/%d}\CharTok{\textbackslash{}n}\StringTok{"}\NormalTok{, }
+                                     \NormalTok{coord, i, }\KeywordTok{nrow}\NormalTok{(d.te))) \}}
+
+    \CommentTok{# ... compute a score for each position ...}
+    \NormalTok{r  <-}\StringTok{ }\KeywordTok{foreach}\NormalTok{(}\DataTypeTok{j =} \DecValTok{1}\NormalTok{:}\KeywordTok{nrow}\NormalTok{(params), }\DataTypeTok{.combine=}\NormalTok{rbind) %do%}\StringTok{ }\NormalTok{\{}
+      \NormalTok{x     <-}\StringTok{ }\NormalTok{params$x[j]}
+      \NormalTok{y     <-}\StringTok{ }\NormalTok{params$y[j]}
+      \NormalTok{p     <-}\StringTok{ }\NormalTok{im[(x-patch_size):(x+patch_size), (y-patch_size):(y+patch_size)]}
+      \NormalTok{score <-}\StringTok{ }\KeywordTok{cor}\NormalTok{(}\KeywordTok{as.vector}\NormalTok{(p), }\KeywordTok{as.vector}\NormalTok{(mean.patch))}
+      \NormalTok{score <-}\StringTok{ }\KeywordTok{ifelse}\NormalTok{(}\KeywordTok{is.na}\NormalTok{(score), }\DecValTok{0}\NormalTok{, score)}
+      \KeywordTok{data.frame}\NormalTok{(x, y, score)}
+    \NormalTok{\}}
+
+    \CommentTok{# ... and return the best}
+    \NormalTok{best <-}\StringTok{ }\NormalTok{r[}\KeywordTok{which.max}\NormalTok{(r$score), }\KeywordTok{c}\NormalTok{(}\StringTok{"x"}\NormalTok{, }\StringTok{"y"}\NormalTok{)]}
+    \NormalTok{best}
+  \NormalTok{\}}
+
+  \CommentTok{# retransform to single value}
+  \NormalTok{result <-}\StringTok{ }\NormalTok{(}\KeywordTok{round}\NormalTok{(r[}\DecValTok{1}\NormalTok{]) -}\StringTok{ }\DecValTok{1}\NormalTok{) *}\StringTok{ }\DecValTok{96} \NormalTok{+}\StringTok{ }\KeywordTok{round}\NormalTok{(r[}\DecValTok{2}\NormalTok{])}
+  \NormalTok{result[}\DecValTok{1}\NormalTok{]$x}
+\ErrorTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
 \section{Tensorflow\ldots{}}\label{tensorflow}
 
 \section{Discussion and Comparison}\label{discussion-and-comparison}
 
-\section{Conclusion}\label{conclusion}
+Patch Search * Patch Search is a rather simple yet effective and
+intuitive approach * limitations (composition of image, limited search
+area (pros and cons!, search area at the borders), rotation, etc.. )
+
+\section{Conclusion and Outlook}\label{conclusion-and-outlook}
 
 
 \end{document}
