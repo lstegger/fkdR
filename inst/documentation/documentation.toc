@@ -1,0 +1,27 @@
+\contentsline {section}{\numberline {1}Introduction}{2}{section.1}
+\contentsline {section}{\numberline {2}Loading and Preprocessing the Data}{2}{section.2}
+\contentsline {section}{\numberline {3}Patch Search Learner}{2}{section.3}
+\contentsline {subsection}{\numberline {3.1}Training a Patch for a Facial Keypoint}{3}{subsection.3.1}
+\contentsline {subsection}{\numberline {3.2}Predicting a Facial Keypoint using a Patch}{5}{subsection.3.2}
+\contentsline {section}{\numberline {4}Tensorflow in Combination With R}{7}{section.4}
+\contentsline {subsection}{\numberline {4.1}Deep Neural Nets for Facial Keypoints Detection}{7}{subsection.4.1}
+\contentsline {subsection}{\numberline {4.2}Multi-Layer Perceptron (MLP)}{8}{subsection.4.2}
+\contentsline {subsubsection}{\numberline {4.2.1}Data Preparation}{8}{subsubsection.4.2.1}
+\contentsline {subsubsection}{\numberline {4.2.2}Hyperparameters}{8}{subsubsection.4.2.2}
+\contentsline {subsubsection}{\numberline {4.2.3}Network Structure}{8}{subsubsection.4.2.3}
+\contentsline {subsubsection}{\numberline {4.2.4}Tensorflow Graph}{9}{subsubsection.4.2.4}
+\contentsline {subsubsection}{\numberline {4.2.5}Training and Evaluating the Model}{10}{subsubsection.4.2.5}
+\contentsline {subsubsection}{\numberline {4.2.6}Submission File}{11}{subsubsection.4.2.6}
+\contentsline {subsubsection}{\numberline {4.2.7}Save and Restore}{11}{subsubsection.4.2.7}
+\contentsline {subsection}{\numberline {4.3}Convolutional Neural Network (CNN)}{11}{subsection.4.3}
+\contentsline {subsubsection}{\numberline {4.3.1}Convolution, Max Pooling, Dropout and Fully Connected Layer}{11}{subsubsection.4.3.1}
+\contentsline {paragraph}{\numberline {4.3.1.1}Theory}{11}{paragraph.4.3.1.1}
+\contentsline {subparagraph}{\numberline {4.3.1.1.1}Convolution}{11}{subparagraph.4.3.1.1.1}
+\contentsline {subparagraph}{\numberline {4.3.1.1.2}Max Pooling}{12}{subparagraph.4.3.1.1.2}
+\contentsline {subparagraph}{\numberline {4.3.1.1.3}Dropout}{12}{subparagraph.4.3.1.1.3}
+\contentsline {subparagraph}{\numberline {4.3.1.1.4}Fully Connected Layer}{12}{subparagraph.4.3.1.1.4}
+\contentsline {paragraph}{\numberline {4.3.1.2}Practice}{13}{paragraph.4.3.1.2}
+\contentsline {subparagraph}{\numberline {4.3.1.2.1}Convenience Functions}{13}{subparagraph.4.3.1.2.1}
+\contentsline {subparagraph}{\numberline {4.3.1.2.2}Tensorflow Graph Definition}{13}{subparagraph.4.3.1.2.2}
+\contentsline {section}{\numberline {5}Discussion and Comparison}{14}{section.5}
+\contentsline {section}{\numberline {6}Conclusion and Outlook}{15}{section.6}
