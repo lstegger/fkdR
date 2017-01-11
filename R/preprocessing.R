@@ -1,3 +1,6 @@
+#' Apply histogram equalization on all images in order to improve contrast and save
+#' preprocessed data in data directory.
+#'
 #' @export
 prep.equalize <- function() {
   print("Applying histogram equalization on test images...")
@@ -23,4 +26,7 @@ prep.equalize <- function() {
   save(im.train.equalized, file=paste0(data.dir, 'faces.train.equalized.RData'), compress = TRUE)
 }
 
-# ideas: mirrored copies as further inputs
+# outlook:
+# - mirrored copies as further inputs
+# - find face(s) and crop (too complex for now)
+# - horizontal alignment (probably not easy on test images)
