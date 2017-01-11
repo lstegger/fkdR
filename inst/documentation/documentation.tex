@@ -497,8 +497,8 @@ our prediction.
 \end{Highlighting}
 \end{Shaded}
 
-\section{Tensorflow in Combination With
-R}\label{tensorflow-in-combination-with-r}
+\hypertarget{deep-neural-nets}{\section{Tensorflow in Combination With
+R}\label{deep-neural-nets}}
 
 Tensorflow (TF) is an open source library for machine learning,
 originally developed by Google. It became extremely popular recently,
@@ -765,10 +765,13 @@ the current status of the progress is printed to the terminal.
   \NormalTok{for(batchNr in }\KeywordTok{seq_len}\NormalTok{(numberOfBatches)) \{}
     \NormalTok{rowIndices =}\StringTok{ }\KeywordTok{nextBatchIndices}\NormalTok{(shuffledIndices, batchNr, batch_size)}
 
-    \NormalTok{train_accuracy <-}\StringTok{ }\NormalTok{sess$}\KeywordTok{run}\NormalTok{(accuracy, }\DataTypeTok{feed_dict =} \KeywordTok{dict}\NormalTok{(}\DataTypeTok{x =} \NormalTok{train.x[rowIndices, ], }\DataTypeTok{y =} \NormalTok{train.y[rowIndices, ]))}
-    \KeywordTok{cat}\NormalTok{(}\KeywordTok{sprintf}\NormalTok{(}\StringTok{"Epoch: %d | Batch: %d/%d | Training RMSE: %g}\CharTok{\textbackslash{}n}\StringTok{"}\NormalTok{, epoch, batchNr, numberOfBatches, train_accuracy))}
+    \NormalTok{train_accuracy <-}\StringTok{ }\NormalTok{sess$}\KeywordTok{run}\NormalTok{(accuracy, }\DataTypeTok{feed_dict =} \KeywordTok{dict}\NormalTok{(}\DataTypeTok{x =} \NormalTok{train.x[rowIndices, ], }
+                                                          \DataTypeTok{y =} \NormalTok{train.y[rowIndices, ]))}
+    \KeywordTok{cat}\NormalTok{(}\KeywordTok{sprintf}\NormalTok{(}\StringTok{"Epoch: %d | Batch: %d/%d | Training RMSE: %g}\CharTok{\textbackslash{}n}\StringTok{"}\NormalTok{, }
+                \NormalTok{epoch, batchNr, numberOfBatches, train_accuracy))}
 
-    \NormalTok{sess$}\KeywordTok{run}\NormalTok{(optimizer, }\DataTypeTok{feed_dict =} \KeywordTok{dict}\NormalTok{(}\DataTypeTok{x =} \NormalTok{train.x[rowIndices, ], }\DataTypeTok{y =} \NormalTok{train.y[rowIndices, ]))}
+    \NormalTok{sess$}\KeywordTok{run}\NormalTok{(optimizer, }\DataTypeTok{feed_dict =} \KeywordTok{dict}\NormalTok{(}\DataTypeTok{x =} \NormalTok{train.x[rowIndices, ], }
+                                         \DataTypeTok{y =} \NormalTok{train.y[rowIndices, ]))}
   \NormalTok{\}}
 \NormalTok{\}}
 \end{Highlighting}
@@ -830,11 +833,14 @@ restarting the R session.
 \begin{Highlighting}[]
 \CommentTok{# Save data}
 \NormalTok{saver <-}\StringTok{ }\NormalTok{tf$train$}\KeywordTok{Saver}\NormalTok{()}
-\NormalTok{data_file <-}\StringTok{ }\NormalTok{saver$}\KeywordTok{save}\NormalTok{(sess, }\KeywordTok{paste0}\NormalTok{(}\StringTok{"/path/for/submissions/"}\NormalTok{, }\StringTok{"fkdr_mlp_1000epochs.ckpt"}\NormalTok{))}
+\NormalTok{data_file <-}\StringTok{ }\NormalTok{saver$}\KeywordTok{save}\NormalTok{(sess, }\KeywordTok{paste0}\NormalTok{(}\StringTok{"/path/for/submissions/"}\NormalTok{, }
+                                     \StringTok{"fkdr_mlp_1000epochs.ckpt"}\NormalTok{))}
 
 \CommentTok{# Restore Data}
 \NormalTok{sess =}\StringTok{ }\NormalTok{tf$}\KeywordTok{Session}\NormalTok{()}
-\NormalTok{restorer =}\StringTok{ }\NormalTok{tf$train$}\KeywordTok{import_meta_graph}\NormalTok{(}\KeywordTok{paste0}\NormalTok{(}\StringTok{"/path/for/submissions/"}\NormalTok{, }\StringTok{"fkdr_mlp_1000epochs.ckpt.meta"}\NormalTok{))}
+\NormalTok{restorer =}\StringTok{ }\NormalTok{tf$train$}\KeywordTok{import_meta_graph}\NormalTok{(}\KeywordTok{paste0}\NormalTok{(}\StringTok{"/path/for/submissions/"}\NormalTok{, }
+                                             \StringTok{"fkdr_mlp_1000epochs.ckpt.meta"}\NormalTok{))}
+
 \NormalTok{restorer$}\KeywordTok{restore}\NormalTok{(sess, tf$train$}\KeywordTok{latest_checkpoint}\NormalTok{(}\StringTok{"/path/for/submissions/"}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
@@ -1045,11 +1051,89 @@ MLP implementation.
 
 \section{Discussion and Comparison}\label{discussion-and-comparison}
 
-Patch Search * Patch Search is a rather simple yet effective and
-intuitive approach * limitations (composition of image, limited search
-area (pros and cons!, search area at the borders), rotation, etc.. )
+We made predictions based on three different methods. The first one was
+the Patch Search Learner proposed by the authors of the Kaggle
+competition. We tried to improve the results by tuning and resampling
+and furthermore histogram equalized the images first to improve
+contrast. We experienced Patch Search as a rather simple yet effective
+and intuitive approach. It is easy to setup and once the hyperparameters
+are tuned and the model is trained, it runs relatively fast. However, it
+has some important limitations:
+
+It works best, if all images are similarly aligned (i.e.~the face should
+fill the image as much as possible) and the faces are horizontally
+aligned (i.e.~both eyes are lying on one horizontal line). This leads to
+the best mean patches, as it would otherwise become blured and more
+difficult to be found in an image. The alignment is not only important
+for the training of mean patches, but also for the predictions. If the
+patch is horizontally aligned it would e.g.~not match a face, that is
+turned by 90 degrees or smaller. Furthermore, during the definition of
+the search area, pixels which are close to the borders are cut out, such
+that keypoints at the border would not be able to detected. This is kind
+of ironic, as if all images are similarly aligned, the detection of
+positions of keypoints becomes rather trivial, as they are very close to
+each other among all images. Moreover, the Patch Search Learner ignores
+all interdependencies between keypoints, which could also yield some
+worthy information for predictions. The dataset of the Kaggle contest
+fortunately offered very similarly aligned images (it contained just
+some outlier images, where the faces where rotated, scaled or more than
+one face was in the image), such that the prediction accuracy was
+already good.
+
+The drawbacks of the Patch Search Learner motivated us to search for
+methods which are better suited for more general images. These are the
+Deep Neural Nets introduced in
+\protect\hyperlink{deep-neural-nets}{section 4}. They are a lot more
+robust against rotated and scaled images than the Patch Search Learner.
+The MLP is the simplest form of deep learning, why it was a good
+starting point into Deep Neural Nets. It typically has less parameters
+than CNN and can therefore be faster trained. However, it has still some
+limitations regarding suitability for images. I.e. images typically have
+a lot of features that are not abstracted in a MLP, because it lacks
+techniques like Max Pooling. Thus, it is not feasible for training with
+large images. Moreover, spatial relationships of features are factored
+in less than in CNNs. Anyway, for the Kaggle dataset it yielded already
+better results than the Patch Search Learner.
+
+As already indicated, the way to go for keypoint detection in images is
+the construction of a CNN. Altouh deep inside a CNN is still a MLP just
+with a special structure, it provides better results especially for
+images, as it contains repetitive blocks of neurons that are applied
+accross space (e.g.~for iamges) or time (e.g.~for audio signals).
+Therefore, they work well for problems where the spatial relationship of
+features matters. We could confirm this, as the CNNs yielded the best
+results among all three methods.
 
 \section{Conclusion and Outlook}\label{conclusion-and-outlook}
+
+During the project we went from simple methods like the Patch Search
+Learner to advanced methods like the Convolutional Neural Net. We
+discovered the high potential of Deep Learning Algorithms and faced the
+complexity of properly setting up such algorithms. Limitied computation
+power as well as limited time unfortunately did not let us take
+advantage of the full potential of them, which motivates us to give an
+outlook on how to improve our results.
+
+First, the input data can be improved in order to improve results.
+Obiously more training data improves the models. This could with the
+Kaggle dataset e.g.~be achieved by mirroring the images. We decided to
+leave this for the outlook, to save computation time. For patch search
+the results could further be improved by first cropping and rotating the
+images, such that all of them are rather similarly aligned. For training
+images this should be rather straightforward as we know the keypoints
+and can guess the borders of the face by them. Doing this automatically
+for test images could become complex, because it is another face
+recognition step which has the same difficulties as finding the
+keypoints themselves. Therefore using Deep Learning methods is more
+promising, as it is more robust against rotations and scalings.
+
+The MLP and CNN leave much room for improvements, as the composition of
+layers can be changed. Tuning them is not trivial and a task, that needs
+quite a lot of computation power. Furthermore, as of now, there is no
+recommendation in research on how layers should be composed in order to
+achieve best results. With more computation power, some tuning, more
+training data and maybe a lot of try and error, especially the CNN could
+still be heavily improved.
 
 
 \end{document}

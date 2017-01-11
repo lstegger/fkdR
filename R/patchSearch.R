@@ -13,10 +13,9 @@
 #' @return mean patch of target keypoint
 patchSearch.train <- function(f, d.tr, patch_size = 10, search_size = 2) {
   coord = all.vars(f)[1]
-
   cat(sprintf("computing mean patch for %s\n", coord))
 
-  # compute average patch
+  # extract all patches
   patches <- foreach (i = 1:nrow(d.tr), .combine=rbind) %do% {
     if ((i %% 100)==0) { cat(sprintf("Extracting %s patch from training image %d/%d\n", coord, i, nrow(d.tr))) }
     im  <- matrix(data = d.tr[i,"Image"], nrow=96, ncol=96)
