@@ -1,17 +1,17 @@
+## patch search algorithm based on https://www.kaggle.com/c/facial-keypoints-detection/details/getting-started-with-r
+## wrapped into a mlR learner to allow easy tuning, resampling, etc.
 
-#' Title
+#' Training function for patch search algorithm
+#' Calculates mean patch of some keypoint (x, y) in an image set by extracting all squared patches with center
+#' (x, y), width 2 * patch_size + 1 and height 2 * patch_size + 1 and calculating the mean of all patches afterwards.
 #'
-#' @param f
-#' @param d.tr
-#' @param patch_size
-#' @param search_size
+#' @param f task function in order to determine target keypoint
+#' @param d.tr the training dataset
+#' @param patch_size determines size of the mean patch
+#' @param search_size determines search area in test image
 #'
-#' @return
-#' @export
-#'
-#' @examples
+#' @return mean patch of target keypoint
 patchSearch.train <- function(f, d.tr, patch_size = 10, search_size = 2) {
-  str(d.tr)
   coord = all.vars(f)[1]
 
   cat(sprintf("computing mean patch for %s\n", coord))
@@ -42,12 +42,22 @@ patchSearch.train <- function(f, d.tr, patch_size = 10, search_size = 2) {
 
   # return mean patch
   mean.patch = matrix(data = colMeans(patches), nrow=2*patch_size+1, ncol=2*patch_size+1)
-  image(1:(2*patch_size+1), 1:(2*patch_size+1), mean.patch, col=gray((0:255)/255), breaks = 0:256)
+
+  # plot mean patch
+  par(mar = rep(0, 4))
+  image(1:(2*patch_size+1), 1:(2*patch_size+1),
+        mean.patch[nrow(mean.patch):1,ncol(mean.patch):1],
+        col=gray((0:255)/255), xaxt = "n", yaxt = "n", ann = FALSE, breaks = 0:256)
+
+  # return the mean patch
   mean.patch
 }
 
-#' Title
-#'
+#' Predicts the keypoint position in four steps:
+#' 1) first the mean keypoint position of all training images is calculated
+#' 2) then the search area is determined with the mean position as center, width of 2 * search_size + 1 and height of 2 * search_size + 1
+#' 3) the last step is to run through the search area and compare the trained mean patch with all possible positions
+#' 4) the best fitting position is used as prediction
 #' @param model
 #' @param f
 #' @param d.te
@@ -55,11 +65,7 @@ patchSearch.train <- function(f, d.tr, patch_size = 10, search_size = 2) {
 #' @param search_size
 #'
 #' @return
-#' @export
-#'
-#' @examples
 patchSearch.predict <- function(model, f, d.te, patch_size = 10, search_size = 2)  {
-  str(d.te)
   mean.patch = model$learner.model
 
   # the coordinates we want to predict
@@ -71,32 +77,17 @@ patchSearch.predict <- function(model, f, d.te, patch_size = 10, search_size = 2
   mean_x  <- mean(d.train[, coord_x], na.rm=T)
   mean_y  <- mean(d.train[, coord_y], na.rm=T)
 
-  # str(mean_x)
-  # str(mean_y)
-  # str(patch_size)
-  # str(search_size)
-
   # search space: 'search_size' pixels centered on the average coordinates
   x1 <- as.integer(mean_x)-search_size
   x2 <- as.integer(mean_x)+search_size
   y1 <- as.integer(mean_y)-search_size
   y2 <- as.integer(mean_y)+search_size
 
-  # str(x1)
-  # str(y1)
-  # str(x2)
-  # str(y2)
-
   # ensure we only consider patches completely inside the image
   x1 <- ifelse(x1-patch_size<1,  patch_size+1,  x1)
   y1 <- ifelse(y1-patch_size<1,  patch_size+1,  y1)
   x2 <- ifelse(x2+patch_size>96, 96-patch_size, x2)
   y2 <- ifelse(y2+patch_size>96, 96-patch_size, y2)
-#
-#   str(x1)
-#   str(y1)
-#   str(x2)
-#   str(y2)
 
   # build a list of all positions to be tested
   params <- expand.grid(x = x1:x2, y = y1:y2)
@@ -121,19 +112,17 @@ patchSearch.predict <- function(model, f, d.te, patch_size = 10, search_size = 2
     best
   }
 
+  # retransform to single value
   result <- (round(r[1]) - 1) * 96 + round(r[2])
-  str(result[1]$x)
   result[1]$x
 }
 
 
 
-#' Title
+#' Create the custom learner for the patch search algorithm
 #'
-#' @return
+#' @return the patch search learner
 #' @export
-#'
-#' @examples
 makeRLearner.regr.patchSearch = function() {
   makeRLearnerRegr(
     cl = "regr.patchSearch",
@@ -149,27 +138,34 @@ makeRLearner.regr.patchSearch = function() {
   )
 }
 
+#' creates the training part of the patch search learner
+#'
+#' @param .learner the patch search learner
+#' @param .task the current task
+#' @param .subset the training data
+#' @param ...
+#'
+#' @return the mean patch calculated by patchSearch.train()
+#'
 #' @export
 trainLearner.regr.patchSearch = function(.learner, .task, .subset, ...) {
-  str(.subset)
   patchSearch.train(f = getTaskFormula(.task),
                     d.tr = getTaskData(.task, .subset),
                     ...)
 }
 
-#' Title
+#' creates the prediction part of the patch search learner
 #'
-#' @param .learner
-#' @param .model
-#' @param .newdata
+#' @param .learner the patch search learner
+#' @param .model the current model
+#' @param .newdata data on which the predictions should be calculated
 #' @param ...
 #'
-#' @return
+#' @return the prediction of the current keypoint
 #' @export
 #'
 #' @examples
 predictLearner.regr.patchSearch = function(.learner, .model, .newdata, ...) {
-  str(.newdata)
   .patch_size = .model$learner$par.vals$patch_size
   .search_size = .model$learner$par.vals$search_size
 
@@ -184,41 +180,37 @@ predictLearner.regr.patchSearch = function(.learner, .model, .newdata, ...) {
                       ...)
 }
 
-## Define a function that calculates the misclassification rate
-#' Title
+#' Helper function to calculate the root mean squared error
 #'
-#' @param task
-#' @param model
-#' @param pred
+#' @param task the patch search regression task
+#' @param model the learned model containing the mean patch
+#' @param pred the predictions of keypoints
 #' @param feats
 #' @param extra.args
 #'
 #' @return
-#' @export
-#'
-#' @examples
 rmse2d.fun = function(task, model, pred, feats, extra.args) {
+  # retransform response and truth values to x and y coordinate
+  # (assuming an image of 96 x 96 pixels)
   response = data.frame(
     x = getPredictionResponse(pred) %% 96 + 1,
     y = getPredictionResponse(pred) %/% 96
   )
+
   truth = data.frame(
     x = getPredictionTruth(pred) %% 96 + 1,
     y = getPredictionTruth(pred) %/% 96
   )
 
+  # calculate the root mean squared error
   rmse = sqrt((response$x-truth$x)^2 + (response$y-truth$y)^2)
-  str(rmse)
   mean(rmse)
 }
 
-## Generate the Measure object
-#' Title
+#' Custom measure which respects the transformation of 2-dimensional data into one value
 #'
-#' @return
+#' @return the rmse2d measure object
 #' @export
-#'
-#' @examples
 rmse2d = function() {
   mlr::makeMeasure(
     id = "rmse2d", name = "Root Mean Squared Error for 2-dimensional data",

@@ -30,8 +30,8 @@ data.test <- d.test
 data.test$Image <- im.test.equalized
 data.test[,coordinate.names] <- NA
 
-# learn models and predict coordinates for each key point
-results <- foreach(coord = coordinate.names[3:5]) %do% {
+# learn models and predict coordinates for each key point (may run a couple of hours)
+results <- foreach(coord = coordinate.names) %do% {
   print(coord)
   # generate the task
   task = makeRegrTask(data = data.train[which(!is.na(data.train[,coord])),
@@ -67,8 +67,11 @@ results <- foreach(coord = coordinate.names[3:5]) %do% {
                     patch_size = as.integer(params.tuned$patch_size),
                     search_size = as.integer(params.tuned$search_size))
 
+  # train model with tuned params
   mod = train(learner = lrn, task = task)
 
+  print("Predict keypoints using test dataset")
+  # make
   pred = predict(mod, newdata = data.test)
 
   list(model = mod, prediction = pred, params = params.tuned, tuneplot = g)

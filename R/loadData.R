@@ -1,6 +1,7 @@
-### TEMP
-#data.dir = '/Users/henry/Dropbox/Universität/Information Systems M.Sc./_Applied Machine Learning WT 2016/data/'
-
+#' Loads csv files from facial keypoint recognition contest on kaggle and loads them
+#' into data.frames with correct data types. Afterwards they are saved for
+#'
+#' @return
 #' @export
 #'
 #' @examples
@@ -9,12 +10,6 @@ processRawData <- function() {
   print("Loading datasets...")
   d.train <<- read.csv(paste0(data.raw.dir, 'faces.train.csv.gz'), stringsAsFactors=F)
   d.test  <<- read.csv(paste0(data.raw.dir, 'faces.test.csv.gz'),  stringsAsFactors=F)
-
-  # Put images in separate variable
-  # im.train      <<- d.train$Image
-  # d.train$Image <<- NULL
-  # im.test       <<- d.test$Image
-  # d.test$Image  <<- NULL
 
   print("Converting images...")
   # Convert images: chr to int
@@ -29,20 +24,4 @@ processRawData <- function() {
   # Save data
   save(d.test,  file=paste0(data.dir, 'faces.test.RData'),  compress = TRUE)
   save(d.train, file=paste0(data.dir, 'faces.train.RData'), compress = TRUE)
-
-  df <- data.frame(foreach(coord = coordinate.names) %dopar% {
-    cat(sprintf("computing mean patch for %s\n", coord))
-    coord_x <- paste(coord, "x", sep="_")
-    coord_y <- paste(coord, "y", sep="_")
-
-    # compute average patch
-    as.vector(foreach (i = 1:nrow(d.train), .combine=rbind) %do% {
-      x   <- round(d.train[i, coord_x])
-      y   <- round(d.train[i, coord_y])
-      96 * (y - 1) + x
-    })
-  })
-
-  colnames(df) <- coordinate.names
-  d.train <<- cbind(d.train, df)
 }
