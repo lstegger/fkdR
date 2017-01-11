@@ -31,8 +31,6 @@ display_step = 1L
 
 # Network Parameters
 n_input = 9216L # 96x96 pixels
-n_hidden_1 = 256L # 1st layer number of features
-n_hidden_2 = 256L # 2nd layer number of features
 n_classes = 30L # 15 x, 15 y coordinates
 
 # tf Graph input

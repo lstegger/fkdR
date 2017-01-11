@@ -19,7 +19,7 @@ Initially, Google provided an API for Python and C++, but the team behind RStudi
 
 Since we want to predict 15 keypoints in the face of a person, each having an x- and a y-coordinate, the prediciton of the statistical model has to provide 30 values. Moreover, the facial keypoints detection problem is a regression problem: the predicted number for a certain keypoint position contains spatial information, which would be lost if the prediction would be treated as a classification problem (i.e. no numerical order of the values). As the analyzed data set's images have the dimensions [96, 96], the predicted values should also lie in that range.
 
-The nature of of multi-node layers in neural networks makes it easy to obtain multiple outputs (as compared to other model-types where it might be necessary to create one model for every prediction value). In addition, especially convolutional neural networks have proven to work very well in image related problems (and more generally in problems where spatial information matters). We have built and successfully trained a multi-layer perceptron and a convolutional neural network, which will be described in the following.
+The nature of multi-node layers in neural networks makes it easy to obtain multiple outputs (as compared to other model-types where it might be necessary to create one model for every prediction value). In addition, especially convolutional neural networks have proven to work very well in image related problems (and more generally in problems where spatial information matters). We have built and successfully trained a multi-layer perceptron and a convolutional neural network, which will be described in the following.
 
 ### Multi-Layer Perceptron
 #### Data Preparation
@@ -85,7 +85,7 @@ bias_variable <- function(shape) {
   tf$Variable(initial)
 }
 ```
-Afterwards we define the actual model in the graph. (Hidden) Layer 1 is a matrix multiplication of the input x. The shape is defined by the parameters specified in the **Network Structure** section. The output of this layer runs through another _ReLU_ layer. This simply sets all negative output to 0. The output of that layer is fed into the second (hidden) layer, which performs another matrix multiplication and has the previosuly defined shape. The output of this layer runs through another ReLU layer as well. Finally, the output is fed into the output layer, which has exactly 30 nodes to represent all 15 coordinate pairs of the facial keypoints.
+Afterwards we define the actual model in the graph. (Hidden) Layer 1 is a matrix multiplication of the input x. The shape is defined by the parameters specified in the **Network Structure** section. The output of this layer runs through another _ReLU_ layer (_Rectified Linear Unit_). This simply sets all negative output to 0. The output of that layer is fed into the second (hidden) layer, which performs another matrix multiplication and has the previosuly defined shape. The output of this layer runs through another ReLU layer as well. Finally, the output is fed into the output layer, which has exactly 30 nodes to represent all 15 coordinate pairs of the facial keypoints.
 ```{r}
 layer1 = tf$add(tf$matmul(x, weight_variable(shape(n_input, n_hidden_1))),
                 bias_variable(shape(n_hidden_1)))
@@ -104,7 +104,7 @@ cost = tf$reduce_mean(tf$square(out_layer - y))
 optimizer = tf$train$AdamOptimizer(learning_rate = learning_rate)$minimize(cost)
 accuracy = tf$sqrt(cost) * 48
 ```
-Finally, this graph definition does can not be interfaced until a TF session is launched, and the TF variables we just created are initialized.
+Finally, this graph definition can not be interfaced until a TF session is launched and the TF variables we just created are initialized.
 ```{r}
 sess <- tf$Session()
 sess$run(tf$initialize_all_variables())
@@ -174,5 +174,29 @@ restorer$restore(sess, tf$train$latest_checkpoint("/path/for/submissions/"))
 Unfortunately, this (as of now) leads to unexpected behavior, although the code should be correct. We filed a Github issue for this and are in a conversation with two of the lead RStudio/Tensorflow programmers.
 
 ### Convolutional Neural Network
+In order to build a convolutional neural network, we need two more convenience functions and of course a different layer structure.
 
+#### Convolution and Max Pooling
+In the following, the process of convolution and pooling will be described in general, followed by the code that implements the theoretical excursion.
+
+##### Convolution
+A convolutional (short "CONV") layer is essentially a set of so called filters, which can be trained. In contrast to traditional image recognition techniques, where filters like the _Sobel Edge Detector_ might be used to detect certain features in an image, the filters in the CONV layer are randomly initialized (not predefined) and they are solely shaped through training the network.
+
+A filter is essentially a window (typically 5 by 5 pixels) that slides (--> **convolves**) across an image. For colored images, the window is a cube (5x5x**3**), since the image contains three color channels.
+
+Once a network is trained sufficiently, one of the filters might actually look like an edge (similar to Sobel for instance).
+
+* ~
+* ~
+* ~
+* Image of filters
+* ~
+* ~
+* ~
+
+When using the trained network to make a prediction, the filter window slides across the image. Every pixel in the filter window gets matched with the underlying part of the image. If the pixels are similar, this contributes to a high activation of the filter. For the edge filter, this means that there is an edge in the image that looks similar to the filter.
+
+
+
+##### Pooling
 aaa

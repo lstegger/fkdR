@@ -129,7 +129,7 @@ $(document).ready(function () {
 <div id="deep-neural-nets-for-facial-keypoints-detection" class="section level2">
 <h2>Deep Neural Nets for Facial Keypoints Detection</h2>
 <p>Since we want to predict 15 keypoints in the face of a person, each having an x- and a y-coordinate, the prediciton of the statistical model has to provide 30 values. Moreover, the facial keypoints detection problem is a regression problem: the predicted number for a certain keypoint position contains spatial information, which would be lost if the prediction would be treated as a classification problem (i.e. no numerical order of the values). As the analyzed data set’s images have the dimensions [96, 96], the predicted values should also lie in that range.</p>
-<p>The nature of of multi-node layers in neural networks makes it easy to obtain multiple outputs (as compared to other model-types where it might be necessary to create one model for every prediction value). In addition, especially convolutional neural networks have proven to work very well in image related problems (and more generally in problems where spatial information matters). We have built and successfully trained a multi-layer perceptron and a convolutional neural network, which will be described in the following.</p>
+<p>The nature of multi-node layers in neural networks makes it easy to obtain multiple outputs (as compared to other model-types where it might be necessary to create one model for every prediction value). In addition, especially convolutional neural networks have proven to work very well in image related problems (and more generally in problems where spatial information matters). We have built and successfully trained a multi-layer perceptron and a convolutional neural network, which will be described in the following.</p>
 <div id="multi-layer-perceptron" class="section level3">
 <h3>Multi-Layer Perceptron</h3>
 <div id="data-preparation" class="section level4">
@@ -181,7 +181,7 @@ bias_variable &lt;- function(shape) {
   initial &lt;- tf$constant(0.1, shape=shape)
   tf$Variable(initial)
 }</code></pre>
-<p>Afterwards we define the actual model in the graph. (Hidden) Layer 1 is a matrix multiplication of the input x. The shape is defined by the parameters specified in the <strong>Network Structure</strong> section. The output of this layer runs through another <em>ReLU</em> layer. This simply sets all negative output to 0. The output of that layer is fed into the second (hidden) layer, which performs another matrix multiplication and has the previosuly defined shape. The output of this layer runs through another ReLU layer as well. Finally, the output is fed into the output layer, which has exactly 30 nodes to represent all 15 coordinate pairs of the facial keypoints.</p>
+<p>Afterwards we define the actual model in the graph. (Hidden) Layer 1 is a matrix multiplication of the input x. The shape is defined by the parameters specified in the <strong>Network Structure</strong> section. The output of this layer runs through another <em>ReLU</em> layer (<em>Rectified Linear Unit</em>). This simply sets all negative output to 0. The output of that layer is fed into the second (hidden) layer, which performs another matrix multiplication and has the previosuly defined shape. The output of this layer runs through another ReLU layer as well. Finally, the output is fed into the output layer, which has exactly 30 nodes to represent all 15 coordinate pairs of the facial keypoints.</p>
 <pre class="r"><code>layer1 = tf$add(tf$matmul(x, weight_variable(shape(n_input, n_hidden_1))),
                 bias_variable(shape(n_hidden_1)))
 layer1 = tf$nn$relu(layer1)
@@ -196,7 +196,7 @@ out_layer = tf$matmul(layer2, weight_variable(shape(n_hidden_2, n_classes))) +
 <pre class="r"><code>cost = tf$reduce_mean(tf$square(out_layer - y))
 optimizer = tf$train$AdamOptimizer(learning_rate = learning_rate)$minimize(cost)
 accuracy = tf$sqrt(cost) * 48</code></pre>
-<p>Finally, this graph definition does can not be interfaced until a TF session is launched, and the TF variables we just created are initialized.</p>
+<p>Finally, this graph definition can not be interfaced until a TF session is launched and the TF variables we just created are initialized.</p>
 <pre class="r"><code>sess &lt;- tf$Session()
 sess$run(tf$initialize_all_variables())</code></pre>
 </div>
@@ -256,7 +256,31 @@ restorer$restore(sess, tf$train$latest_checkpoint(&quot;/path/for/submissions/&q
 </div>
 <div id="convolutional-neural-network" class="section level3">
 <h3>Convolutional Neural Network</h3>
+<p>In order to build a convolutional neural network, we need two more convenience functions and of course a different layer structure.</p>
+<div id="convolution-and-max-pooling" class="section level4">
+<h4>Convolution and Max Pooling</h4>
+<p>In the following, the process of convolution and pooling will be described in general, followed by the code that implements the theoretical excursion.</p>
+<div id="convolution" class="section level5">
+<h5>Convolution</h5>
+<p>A convolutional (short “CONV”) layer is essentially a set of so called filters, which can be trained. In contrast to traditional image recognition techniques, where filters like the <em>Sobel Edge Detector</em> might be used to detect certain features in an image, the filters in the CONV layer are randomly initialized (not predefined) and they are solely shaped through training the network.</p>
+<p>A filter is essentially a window (typically 5 by 5 pixels) that slides (–&gt; <strong>convolves</strong>) across an image. For colored images, the window is a cube (5x5x<strong>3</strong>), since the image contains three color channels.</p>
+<p>Once a network is trained sufficiently, one of the filters might actually look like an edge.</p>
+<ul>
+<li>~</li>
+<li>~</li>
+<li>~</li>
+<li>Image of filters</li>
+<li>~</li>
+<li>~</li>
+<li>~</li>
+</ul>
+<p>When using the trained network to make a prediction, the filter window slides across the image. Every pixel in that window gets matched with the underlying part of the image. If the pixels are similar, this contributes to a high activation of the filter. For the edge filter, this means that there is an edge in the image that has a similar look to the filter.</p>
+</div>
+<div id="pooling" class="section level5">
+<h5>Pooling</h5>
 <p>aaa</p>
+</div>
+</div>
 </div>
 </div>
 
