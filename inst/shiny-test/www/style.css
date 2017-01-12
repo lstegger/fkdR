@@ -1,0 +1,18 @@
+video, canvas {
+  transform: scalex(-1);
+}
+
+#videowrapper {
+  width: 480px;
+  overflow: hidden;
+  display: none;
+}
+
+#videowrapper video {
+  margin-left: -80px;
+}
+
+#wrapper {
+  width: auto;
+  margin: auto;
+}
