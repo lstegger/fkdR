@@ -1,5 +1,13 @@
+h2 {
+  text-align: center;
+}
+
 video, canvas {
   transform: scalex(-1);
+  margin: 0;
+  padding: 0;
+  display: block;
+  float: left;
 }
 
 #videowrapper {
@@ -12,11 +20,23 @@ video, canvas {
   margin-left: -80px;
 }
 
-#wrapper {
-  width: auto;
+#zoom {
+  margin: auto;
+  margin-top: 100px;
+  margin-bottom: 72px;
+  padding: 0;
+  transform: scale(2.5);
+  width: 192px;
+}
+
+#zoom:after {
+  content: " ";
+  display: block;
+  clear: both;
+}
+
+#keypointImg img {
+  display: block;
   margin: auto;
 }
 
-#zoom canvas {
-    /*transform: scale(5);*/
-}
