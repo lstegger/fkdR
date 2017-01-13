@@ -9,7 +9,7 @@
 #' @examples
 #' writeSubmissionFile(pred, "~/fkdR/submissions/", "mySubnmission.csv")
 writeSubmissionFile <- function(predictions, .submission.dir = submission.dir, filename = "submission.csv") {
-  colnames(predictions) = names(d.train[,-"Image"])
+  colnames(predictions) = names(subset(d.train, select = -Image))
   predictions = data.frame(ImageId = 1:nrow(d.test), predictions)
 
   # reshape predictions
@@ -31,5 +31,5 @@ writeSubmissionFile <- function(predictions, .submission.dir = submission.dir, f
   submission[which(submission$Location > 96), 2] = 96
 
   # write submission file
-  write.csv(submission, file=paste0(submission.dir, filename), quote=F, row.names=F)
+  write.csv(submission, file=paste0(.submission.dir, filename), quote=F, row.names=F)
 }
