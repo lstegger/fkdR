@@ -25,7 +25,7 @@ shinyServer(function(input, output) {
 
       png(outfile, width=96, height=96)
       par(mar = rep(0, 4))
-      image(1:96, 1:96, imgData, col=gray((0:255)/255), xaxt = "n", yaxt = "n", ann = FALSE, breaks = 0:256)
+      image(1:96, 1:96, imgData[96:1,96:1], col=gray((0:255)/255), xaxt = "n", yaxt = "n", ann = FALSE, breaks = 0:256)
       dev.off()
 
       # Return a list
