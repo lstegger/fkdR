@@ -6,21 +6,22 @@
 library(shiny)
 
 shinyUI(fluidPage(
-  useShinyjs(),
   tags$head(tags$link(rel="stylesheet", href="style.css")),
   tags$body(
     titlePanel("Facial Keypoint Detection"),
-    
+
     # video (hidden by css)
     tags$div(id="videowrapper", tags$video(autoplay="autoplay", id="video", width="128", height="96")),
-    
+
     # canvas
-    tags$canvas(id="canvas", width="96", height="96"),
-    tags$canvas(id="canvasGray", width="96", height="96"),
-    
+    tags$div(id="zoom",
+      tags$canvas(id="canvas", width="96", height="96"),
+      tags$canvas(id="canvasGray", width="96", height="96")
+    ),
+
     # plot with keypoints
-    textOutput("test"),
-    
+    imageOutput("keypointImg"),
+
     tags$script(src="script.js")
   )
 ))

@@ -16,3 +16,7 @@ video, canvas {
   width: auto;
   margin: auto;
 }
+
+#zoom canvas {
+    /*transform: scale(5);*/
+}
