@@ -135,6 +135,7 @@ plotFacialKeypoints(data, 1, pred)
 # data_file <- saver$save(sess, paste0("/Users/henry/fkdr_submissions/", "fkdr_cnn_25epochs.ckpt"))
 #
 # # Restore Data
+# Watch out to restore the correct checkpoint file!!!
 # sess = tf$Session()
 # restorer = tf$train$import_meta_graph(paste0("/Users/henry/fkdr_submissions/", "fkdr_cnn????.ckpt.meta"))
 # restorer$restore(sess, tf$train$latest_checkpoint("/Users/henry/fkdr_submissions/"))
