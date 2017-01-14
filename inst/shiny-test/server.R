@@ -13,9 +13,11 @@ shinyServer(function(input, output) {
     imgData <- input$img
     imgData <- as.integer(unlist(strsplit(imgData, ",")))
     imgData <- imgData[1:9216 * 4 - 3]
-    imgData <- as.matrix(imgData / 255)
+    img <- matrix(imgData, nrow = 96)
+    imgData <- t(as.matrix(imgData / 255))
 
-    keypointPositions = sess$run(y_conv, feed_dict = dict(x = imgData, keep_prob = 1.0)) * 48 + 48
+    # keypointPositions = sess$run(y_conv, feed_dict = dict(x = imgData, keep_prob = 1.0)) * 48 + 48
+    keypointPositions = sess$run(out_layer, feed_dict = dict(x = imgData)) * 48 + 48
 
     output$keypointImg <- renderImage({
       # temp file to save the output.
@@ -25,12 +27,13 @@ shinyServer(function(input, output) {
       png(outfile, width=480, height=480)
       par(mar = rep(0, 4))
 
-      image(1:96, 1:96, imgData[96:1,96:1], col=gray((0:255)/255), xaxt = "n", yaxt = "n", ann = FALSE, breaks = 0:256)
+
+      image(1:96, 1:96, img[96:1,96:1], col=gray((0:255)/255), xaxt = "n", yaxt = "n", ann = FALSE, breaks = 0:256)
 
       # plot keypoints
-      indices = seq(1, ncol(keypointPositions[,-c("Image", "ImageId")]), 2)
+      indices = seq(1, ncol(keypointPositions), 2)
       for (i in indices) {
-        points(96-keypointPositions[imgIndex, ][i], 96-keypointPositions[imgIndex, ][i + 1], col = "green", pch = 4)
+         points(96-keypointPositions[1, ][i], 96-keypointPositions[1, ][i + 1], col = "green", pch = 4)
       }
 
       dev.off()

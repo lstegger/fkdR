@@ -9,7 +9,7 @@ zeroNAindices = which(rowSums(is.na(d.train)) == 0)
 train.x = train.x[zeroNAindices, ]
 train.y = train.y[zeroNAindices, ]
 # Simple split for now
-# trainIndices = sample(1:nrow(train.x), size = round(0.7 * nrow(train.x)), replace=FALSE)
+trainIndices = sample(1:nrow(train.x), size = round(0.7 * nrow(train.x)), replace=FALSE)
 train.x = train.x[trainIndices, ]
 test.x = train.x[-trainIndices, ]
 train.y = train.y[trainIndices, ]
@@ -24,7 +24,7 @@ test.y = (test.y - 48) / 48
 
 # Parameters
 learning_rate = 0.001
-training_epochs = 1000L
+training_epochs = 50L
 
 batch_size = 50L
 display_step = 1L
@@ -85,18 +85,6 @@ nextBatchIndices <- function(indices, batchNr, batch_size) {
 # Train and Evaluate the Model
 numberOfBatches = ceiling(nrow(train.x) / batch_size)
 
-for(epoch in seq_len(training_epochs)) {
-  shuffledIndices = sample(seq_len(nrow(train.x)))
-
-  for(batchNr in seq_len(numberOfBatches)) {
-    rowIndices = nextBatchIndices(shuffledIndices, batchNr, batch_size)
-
-    train_accuracy <- sess$run(accuracy, feed_dict = dict(x = train.x[rowIndices, ], y = train.y[rowIndices, ]))
-    cat(sprintf("Epoch: %d | Batch: %d/%d | Training RMSE: %g\n", epoch, batchNr, numberOfBatches, train_accuracy))
-
-    sess$run(optimizer, feed_dict = dict(x = train.x[rowIndices, ], y = train.y[rowIndices, ]))
-  }
-}
 
 test_accuracy <- sess$run(accuracy, feed_dict = dict(x = test.x, y = test.y))
 cat(sprintf("Test RMSE: %g", test_accuracy))
