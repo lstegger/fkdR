@@ -8,12 +8,12 @@ train.y = as.matrix(d.train[,-31])
 zeroNAindices = which(rowSums(is.na(d.train)) == 0)
 train.x = train.x[zeroNAindices, ]
 train.y = train.y[zeroNAindices, ]
-# Simple split for now
-trainIndices = sample(1:nrow(train.x), size = round(0.7 * nrow(train.x)), replace=FALSE)
-train.x = train.x[trainIndices, ]
-test.x = train.x[-trainIndices, ]
-train.y = train.y[trainIndices, ]
-test.y = train.y[-trainIndices, ]
+# # Simple split for now
+# trainIndices = sample(1:nrow(train.x), size = round(0.7 * nrow(train.x)), replace=FALSE)
+# train.x = train.x[trainIndices, ]
+# test.x = train.x[-trainIndices, ]
+# train.y = train.y[trainIndices, ]
+# test.y = train.y[-trainIndices, ]
 # Scale pixel intensities to [0, 1]
 train.x = train.x / 255
 test.x = test.x / 255
@@ -24,7 +24,7 @@ test.y = (test.y - 48) / 48
 
 # Parameters
 learning_rate = 0.001
-training_epochs = 50L
+training_epochs = 2000L
 
 batch_size = 50L
 display_step = 1L
@@ -33,6 +33,7 @@ display_step = 1L
 n_input = 9216L # 96x96 pixels
 n_hidden_1 = 256L # 1st layer number of features
 n_hidden_2 = 256L # 2nd layer number of features
+n_hidden_3 = 256L # 2nd layer number of features
 n_classes = 30L # 15 x, 15 y coordinates
 
 # tf Graph input
@@ -59,7 +60,11 @@ layer2 = tf$add(tf$matmul(layer1, weight_variable(shape(n_hidden_1, n_hidden_2))
                 bias_variable(shape(n_hidden_2)))
 layer2 = tf$nn$relu(layer2)
 
-out_layer = tf$matmul(layer2, weight_variable(shape(n_hidden_2, n_classes))) +
+layer3 = tf$add(tf$matmul(layer2, weight_variable(shape(n_hidden_2, n_hidden_3))),
+                bias_variable(shape(n_hidden_2)))
+layer3 = tf$nn$relu(layer3)
+
+out_layer = tf$matmul(layer3, weight_variable(shape(n_hidden_3, n_classes))) +
             bias_variable(shape(n_classes))
 
 # Define loss and optimizer
@@ -85,14 +90,26 @@ nextBatchIndices <- function(indices, batchNr, batch_size) {
 # Train and Evaluate the Model
 numberOfBatches = ceiling(nrow(train.x) / batch_size)
 
+for(epoch in seq_len(training_epochs)) {
+  shuffledIndices = sample(seq_len(nrow(train.x)))
 
-test_accuracy <- sess$run(accuracy, feed_dict = dict(x = test.x, y = test.y))
-cat(sprintf("Test RMSE: %g", test_accuracy))
+  for(batchNr in seq_len(numberOfBatches)) {
+    rowIndices = nextBatchIndices(shuffledIndices, batchNr, batch_size)
+
+    train_accuracy <- sess$run(accuracy, feed_dict = dict(x = train.x[rowIndices, ], y = train.y[rowIndices, ]))
+    cat(sprintf("Epoch: %d | Batch: %d/%d | Training RMSE: %g\n", epoch, batchNr, numberOfBatches, train_accuracy))
+
+    sess$run(optimizer, feed_dict = dict(x = train.x[rowIndices, ], y = train.y[rowIndices, ]))
+  }
+}
+
+# test_accuracy <- sess$run(accuracy, feed_dict = dict(x = test.x, y = test.y))
+# cat(sprintf("Test RMSE: %g", test_accuracy))
 
 # Plot on first test image
-data = test.x * 255
-pred = out_layer$eval(feed_dict = dict(x = test.x)) * 48 + 48
-plotFacialKeypoints(data, 100, pred)
+# data = test.x * 255
+# pred = out_layer$eval(feed_dict = dict(x = test.x)) * 48 + 48
+# plotFacialKeypoints(data, 100, pred)
 
 # # Save data
 # saver <- tf$train$Saver()

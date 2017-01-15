@@ -37,4 +37,4 @@ setInterval(function(){
 
   // trigger
   Shiny.onInputChange("img", contextGray.getImageData(0, 0, 96, 96).data.join());
-}, 500);
+}, 300);

@@ -13,10 +13,11 @@ shinyServer(function(input, output) {
     imgData <- input$img
     imgData <- as.integer(unlist(strsplit(imgData, ",")))
     imgData <- imgData[1:9216 * 4 - 3]
+    imgData <- IM::histeq(imgData)
     img <- matrix(imgData, nrow = 96)
     imgData <- t(as.matrix(imgData / 255))
 
-    # keypointPositions = sess$run(y_conv, feed_dict = dict(x = imgData, keep_prob = 1.0)) * 48 + 48
+    # keypointPositions = sessConv$run(y_conv_out, feed_dict = dict(x_conv = imgData, keep_prob = 1.0)) * 48 + 48
     keypointPositions = sess$run(out_layer, feed_dict = dict(x = imgData)) * 48 + 48
 
     output$keypointImg <- renderImage({

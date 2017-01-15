@@ -25,7 +25,7 @@ test.y = (test.y - 48) / 48
 
 # Parameters
 learning_rate = 0.001
-training_epochs = 25L
+training_epochs = 1000L
 batch_size = 50L
 display_step = 1L
 
@@ -34,8 +34,8 @@ n_input = 9216L # 96x96 pixels
 n_classes = 30L # 15 x, 15 y coordinates
 
 # tf Graph input
-x = tf$placeholder(tf$float32, shape(NULL, n_input))
-y = tf$placeholder(tf$float32, shape(NULL, n_classes))
+x_conv = tf$placeholder(tf$float32, shape(NULL, n_input))
+y_conv = tf$placeholder(tf$float32, shape(NULL, n_classes))
 
 # Weight and bias convienience functions
 weight_variable <- function(shape) {
@@ -65,7 +65,7 @@ max_pool_2x2 <- function(x) {
 ## First layer (convolution)
 W_conv1 <- weight_variable(shape(5L, 5L, 1L, 32L))
 b_conv1 <- bias_variable(shape(32L))
-x_image <- tf$reshape(x, shape(-1L, 96L, 96L, 1L))
+x_image <- tf$reshape(x_conv, shape(-1L, 96L, 96L, 1L))
 h_conv1 <- tf$nn$relu(conv2d(x_image, W_conv1) + b_conv1)
 ## Second layer (pooling)
 h_pool1 <- max_pool_2x2(h_conv1)
@@ -76,26 +76,26 @@ h_conv2 <- tf$nn$relu(conv2d(h_pool1, W_conv2) + b_conv2)
 ## Fourth layer (pooling)
 h_pool2 <- max_pool_2x2(h_conv2)
 ## Fifth layer (densely connected)
-W_fc1 <- weight_variable(shape(36864L, 1024L))
-b_fc1 <- bias_variable(shape(1024L))
+W_fc1 <- weight_variable(shape(36864L, 512L))
+b_fc1 <- bias_variable(shape(512L))
 h_pool2_flat <- tf$reshape(h_pool2, shape(-1L, 24L * 24L * 64L))
 h_fc1 <- tf$nn$relu(tf$matmul(h_pool2_flat, W_fc1) + b_fc1)
 ## Dropout
 keep_prob <- tf$placeholder(tf$float32)
 h_fc1_drop <- tf$nn$dropout(h_fc1, keep_prob)
 ## Sixth layer (readout)
-W_fc2 <- weight_variable(shape(1024L, 30L))
+W_fc2 <- weight_variable(shape(512L, 30L))
 b_fc2 <- bias_variable(shape(30L))
-y_conv <- tf$matmul(h_fc1_drop, W_fc2) + b_fc2
+y_conv_out <- tf$matmul(h_fc1_drop, W_fc2) + b_fc2
 
 # Define loss and optimizer
-cost = tf$reduce_mean(tf$square(y_conv - y))
+cost = tf$reduce_mean(tf$square(y_conv_out - y_conv))
 optimizer = tf$train$AdamOptimizer(learning_rate = learning_rate)$minimize(cost)
 accuracy = tf$sqrt(cost) * 48
 
 # Initialize graph
-sess <- tf$Session()
-sess$run(tf$initialize_all_variables())
+sessConv <- tf$Session()
+sessConv$run(tf$initialize_all_variables())
 
 # Simple function that returns indices for batching
 nextBatchIndices <- function(indices, batchNr, batch_size) {
@@ -115,31 +115,31 @@ for(epoch in seq_len(training_epochs)) {
   for(batchNr in seq_len(numberOfBatches)) {
     rowIndices = nextBatchIndices(shuffledIndices, batchNr, batch_size)
 
-    train_accuracy <- sess$run(accuracy, feed_dict = dict(x = train.x[rowIndices, ], y = train.y[rowIndices, ], keep_prob = 1.0))
+    train_accuracy <- sessConv$run(accuracy, feed_dict = dict(x_conv = train.x[rowIndices, ], y_conv = train.y[rowIndices, ], keep_prob = 1.0))
     cat(sprintf("Epoch: %d | Batch: %d/%d | Training RMSE: %g\n", epoch, batchNr, numberOfBatches, train_accuracy))
 
-    sess$run(optimizer, feed_dict = dict(x = train.x[rowIndices, ], y = train.y[rowIndices, ], keep_prob = 0.5))
+    sessConv$run(optimizer, feed_dict = dict(x_conv = train.x[rowIndices, ], y_conv = train.y[rowIndices, ], keep_prob = 0.3))
   }
 }
 
-test_accuracy <- sess$run(accuracy, feed_dict = dict(x = test.x, y = test.y, keep_prob = 1.0))
+test_accuracy <- sessConv$run(accuracy, feed_dict = dict(x_conv = test.x, y_conv = test.y, keep_prob = 1.0))
 cat(sprintf("Test RMSE: %g", test_accuracy))
 
 # Plot on first test image
 data = test.x * 255
-pred = sess$run(y_conv, feed_dict = dict(x = test.x, keep_prob = 1.0)) * 48 + 48
+pred = sessConv$run(y_conv_out, feed_dict = dict(x_conv = test.x, keep_prob = 1.0)) * 48 + 48
 plotFacialKeypoints(data, 1, pred)
 
 # # Save data
 # saver <- tf$train$Saver()
-# data_file <- saver$save(sess, paste0("/Users/henry/fkdr_submissions/", "fkdr_cnn_25epochs.ckpt"))
+# data_file <- saver$save(sessConv, paste0("/Users/henry/fkdr_submissions/", "fkdr_cnn_25epochs.ckpt"))
 #
 # # Restore Data
-# sess = tf$Session()
+# sessConv = tf$sessConvion()
 # restorer = tf$train$import_meta_graph(paste0("/Users/henry/fkdr_submissions/", "fkdr_cnn????.ckpt.meta"))
-# restorer$restore(sess, tf$train$latest_checkpoint("/Users/henry/fkdr_submissions/"))
+# restorer$restore(sessConv, tf$train$latest_checkpoint("/Users/henry/fkdr_submissions/"))
 #
 # Make submission file
 # data = d.test$Image / 255
-# pred = sess$run(y_conv, feed_dict = dict(x = data, keep_prob = 1.0)) * 48 + 48
+# pred = sessConv$run(y_conv_out, feed_dict = dict(x_conv = data, keep_prob = 1.0)) * 48 + 48
 # writeSubmissionFile(predictions = pred, "/Users/henry/fkdr_submissions/")
