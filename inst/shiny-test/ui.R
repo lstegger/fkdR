@@ -1,3 +1,4 @@
+
 # This is the user-interface definition of a Shiny web application.
 # You can find out more about building applications with Shiny here:
 #
@@ -10,7 +11,7 @@ shinyUI(fluidPage(
     titlePanel("Facial Keypoint Detection"),
 
     # video (hidden by css)
-    tags$div(id="videowrapper", tags$video(autoplay="autoplay", id="video", width="128", height="96")),
+    tags$div(id="videowrapper", tags$video(autoplay="autoplay", id="video", width="200", height="150")),
 
     # canvas
     tags$div(id="zoom",

@@ -15,7 +15,7 @@ if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
 }
 
 setInterval(function(){
-  context.drawImage(video, -16, 0, 128, 96);
+  context.drawImage(video, -52, -26, 200, 150);
 
   var imageData = context.getImageData(0, 0, 96, 96);
   var data = imageData.data;

@@ -34,7 +34,7 @@ shinyServer(function(input, output) {
       # plot keypoints
       indices = seq(1, ncol(keypointPositions), 2)
       for (i in indices) {
-         points(96-keypointPositions[1, ][i], 96-keypointPositions[1, ][i + 1], col = "green", pch = 4)
+         points(96-keypointPositions[1, ][i], 96-keypointPositions[1, ][i + 1], col = "green", pch = 4, lwd = 5)
       }
 
       dev.off()
